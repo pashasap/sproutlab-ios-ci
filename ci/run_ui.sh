@@ -9,10 +9,14 @@ xcrun simctl boot "$SIM_UDID"; xcrun simctl bootstatus "$SIM_UDID" -b > /dev/nul
 echo "booted at $(( $(date +%s) - JOB_T0 ))s"
 xcrun simctl ui "$SIM_UDID" appearance light
 t=$(date +%s)
-NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
-  -destination "platform=iOS Simulator,id=$SIM_UDID" \
-  -only-testing:SproutLabUITests/SproutLabUITests/$TEST > $A/test.log 2>&1 &
-pid=$!; last=""; same=0; done_at=0; i=0
+start_test () {
+  NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
+    -destination "platform=iOS Simulator,id=$SIM_UDID" \
+    -only-testing:SproutLabUITests/SproutLabUITests/$TEST > $A/test.log 2>&1 &
+  pid=$!
+}
+start_test; retried=0
+last=""; same=0; done_at=0; i=0
 seed () {
   C=$(xcrun simctl get_app_container "$SIM_UDID" com.example.SproutLab data)
   F="$C/Library/Application Support/progress.json"
@@ -21,6 +25,11 @@ seed () {
 while kill -0 $pid 2>/dev/null; do
   sleep 1; i=$((i+1))
   if [ $(( $(date +%s) - JOB_T0 )) -gt $CUTOFF ]; then echo "JOB CUTOFF at t=$i"; xcrun simctl io "$SIM_UDID" screenshot $A/stall/cutoff.png > /dev/null 2>&1; break; fi
+  if [ $retried -eq 0 ] && [ $i -ge 120 ] && ! grep -q "Test Case" $A/test.log; then
+    echo "TEST START STALL: no test case after 120 s (log $(wc -c < $A/test.log) bytes); restarting once"
+    cp $A/test.log $A/test-stalled-start.log; kill $pid; sleep 2; kill -9 $pid 2>/dev/null
+    pkill -f "xcodebuild test-without-building"; sleep 2; retried=1; i=0; start_test
+  fi
   if [ $done_at -eq 0 ] && grep -qE "Test Case .*(passed|failed)" $A/test.log; then done_at=$i; fi
   if [ $done_at -gt 0 ] && [ $((i - done_at)) -ge 6 ]; then echo "test finished; stopping lingering xcodebuild"; break; fi
   for w in dark light xl seed; do

@@ -212,7 +212,7 @@ final class SproutLabUITests: XCTestCase {
             if right.exists { tapSafe(right); sleep(1); shot("\(tag)06-pan-right") }
             let creatures = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sproutlab.creature.")).allElementsBoundByIndex
             note("\(tag) creatures: " + creatures.map { "\($0.identifier)@\($0.frame) '\($0.label)'" }.joined(separator: " ; "))
-            if let c = creatures.first(where: { $0.isHittable }) { tapSafe(c); sleep(1); shot("\(tag)07-resident-tap") }
+            if let c = creatures.first(where: { onScreen($0) }) { tapSafe(c); sleep(1); shot("\(tag)07-resident-tap") }
             let welcome = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sproutlab.welcome.")).firstMatch
             if welcome.exists { tapSafe(welcome); sleep(1); shot("\(tag)08-welcome-tap") } else { note("\(tag) no welcome control") }
         }
@@ -345,21 +345,26 @@ final class SproutLabUITests: XCTestCase {
         return nums.first ?? "?"
     }
 
-    /// Taps only a hittable element; otherwise taps its centre if inside the window, else logs UNREACHABLE.
+    /// Taps an element by coordinate when its centre lies inside the window; otherwise logs UNREACHABLE.
+    /// Never asks for hittability: on an off-screen element that call itself fails the test.
     @MainActor @discardableResult
     private func tapSafe(_ e: XCUIElement) -> Bool {
         guard e.exists else { note("UNREACHABLE (absent) \(e.description.prefix(120))"); return false }
-        if e.isHittable { e.tap(); return true }
         let f = e.frame
-        let w = XCUIApplication().windows.firstMatch.frame
-        let mid = CGPoint(x: f.midX, y: f.midY)
-        if w.contains(mid) {
-            note("tap by coordinate \(e.identifier) '\(e.label)' at \(mid)")
-            XCUIApplication().coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: mid.x, dy: mid.y)).tap()
+        if onScreen(e) {
+            XCUIApplication().coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: f.midX, dy: f.midY)).tap()
             return true
         }
-        note("UNREACHABLE (off-screen) \(e.identifier) '\(e.label)' frame=\(f) window=\(w)")
+        note("UNREACHABLE (off-screen) \(e.identifier) '\(e.label)' frame=\(f) window=\(XCUIApplication().windows.firstMatch.frame)")
         return false
+    }
+
+    @MainActor
+    private func onScreen(_ e: XCUIElement) -> Bool {
+        guard e.exists else { return false }
+        let f = e.frame
+        let w = XCUIApplication().windows.firstMatch.frame
+        return w.insetBy(dx: 2, dy: 2).contains(CGPoint(x: f.midX, y: f.midY))
     }
 
     // MARK: - Host handshake
@@ -436,9 +441,9 @@ final class SproutLabUITests: XCTestCase {
         let t = level(app, id)
         if !t.waitForExistence(timeout: 5) { note("level \(id) ABSENT"); return }
         var tries = 0
-        while !t.isHittable && tries < 4 { app.swipeUp(); usleep(500_000); tries += 1 }
+        while !onScreen(t) && tries < 4 { app.swipeUp(); usleep(500_000); tries += 1 }
         tries = 0
-        while !t.isHittable && tries < 4 { app.swipeDown(); usleep(500_000); tries += 1 }
+        while !onScreen(t) && tries < 4 { app.swipeDown(); usleep(500_000); tries += 1 }
         note("level \(id) enabled=\(t.isEnabled) '\(t.label)'")
         tapSafe(t)
         if !el(app, "sproutlab.back").waitForExistence(timeout: 5) { note("level \(id) did not open a round") }
