@@ -1,3 +1,5 @@
+import Foundation
+
 public struct KitSortBin: Sendable, Equatable {
     public let iconKey: String
     public internal(set) var tokens: [String]
@@ -21,11 +23,31 @@ public struct KitSorting: KitComponent {
     public init(tokens: [String], binIcons: [String]) throws {
         guard (2...3).contains(binIcons.count) else { throw KitError.binCount(binIcons.count) }
         let allowed = Set(ChromeCatalog.allSymbolNames)
-        for key in binIcons where !allowed.contains(key) && !allowed.contains(TextTable.string(key, .en)) {
+        let drawn = allowed.union(ChromeCatalog.terrariumSymbolNames)
+        for key in binIcons where !drawn.contains(key) && !drawn.contains(TextTable.string(key, .en)) {
             throw KitError.unknownIcon(key)
         }
         bins = binIcons.map { KitSortBin(iconKey: $0, tokens: []) }
         unsorted = tokens
+    }
+
+    /// Spoken label of a bin, independent of the selection; never empty.
+    public func binLabel(at index: Int, language: Language) -> String {
+        let template = TextTable.string("kit.bin.label", language)
+        var what = ""
+        if bins.indices.contains(index) {
+            let key = bins[index].iconKey
+            let labelKey = key + ".label"
+            if TextTable.entries[labelKey] != nil || TextTable.iconLabel(labelKey) != nil {
+                what = TextTable.string(labelKey, language)
+            } else if let entry = TextTable.iconLabel(forSymbol: key) {
+                what = language == .fr ? entry.fr : entry.en
+            }
+        }
+        if what.isEmpty {
+            return TextTable.string("kit.bin.fallback", language) + " \(index + 1)"
+        }
+        return template.replacingOccurrences(of: "{what}", with: what)
     }
 
     public var complete: Bool { unsorted.isEmpty }

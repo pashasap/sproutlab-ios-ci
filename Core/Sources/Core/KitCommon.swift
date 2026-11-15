@@ -102,6 +102,8 @@ extension TextTable {
         "kit.action.submit": TextEntry("Valider la réponse", "Submit answer"),
         "kit.action.reveal": TextEntry("Montrer l'image", "Show the picture"),
         "kit.action.reset": TextEntry("Recommencer", "Start again"),
+        "kit.bin.label": TextEntry("Ranger ici : {what}", "Put here: {what}"),
+        "kit.bin.fallback": TextEntry("Boîte", "Bin"),
         "kit.say.selected": TextEntry("Choisi", "Picked"),
         "kit.say.placed": TextEntry("Placé", "Placed"),
         "kit.say.returned": TextEntry("Repris", "Taken back"),

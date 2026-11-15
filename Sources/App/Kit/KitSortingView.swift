@@ -11,7 +11,7 @@ struct KitSortingView: View {
         let actions = sorting.accessibilityActions
         HStack(spacing: 12) {
             ForEach(sorting.tapTargets, id: \.identifier) { target in
-                KitTargetButton(target: target, label: target.label(for: actions, language),
+                KitTargetButton(target: target, label: label(for: target, actions: actions),
                                 action: send) {
                     content(for: target)
                 }
@@ -19,6 +19,13 @@ struct KitSortingView: View {
         }
         .kitActions(actions, language: language) { send($0.command) }
         .kitAnnounce(sorting.announcements, language: language)
+    }
+
+    private func label(for target: KitTapTarget, actions: [KitAccessibilityAction]) -> String {
+        if case .tapBin(let index) = target.command {
+            return sorting.binLabel(at: index, language: language)
+        }
+        return target.label(for: actions, language)
     }
 
     @ViewBuilder

@@ -57,7 +57,7 @@ public struct ContentRegistry: Sendable {
         ContentTextTable(id: "gallery", entries: TextTable.galleryTexts),
         ContentTextTable(id: "terrarium", entries: TextTable.terrariumTexts),
         ContentTextTable(id: "journal", entries: TextTable.journalTexts),
-        ContentTextTable(id: "kit", entries: TextTable.kitTexts),
+        ContentTextTable(id: "kit", entries: TextTable.kitTexts.merging(TextTable.laneTexts) { first, _ in first }),
         ContentTextTable(id: "reading", entries: TextTable.readingTexts.merging(TextTable.readingR1Texts) { first, _ in first }),
         ContentTextTable(id: "reading-r2", entries: TextTable.readingR2Texts),
         ContentTextTable(id: "reading-r3", entries: TextTable.readingR3Texts),

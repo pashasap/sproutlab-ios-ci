@@ -10,6 +10,11 @@ extension TextTable {
         return iconDefinitions.first { $0.key == base }.map { TextEntry($0.labelFR, $0.labelEN) }
     }
 
+    /// Label of the first icon drawn with the SF Symbol `symbol`, if any.
+    static func iconLabel(forSymbol symbol: String) -> TextEntry? {
+        iconDefinitions.first { $0.symbol == symbol }.map { TextEntry($0.labelFR, $0.labelEN) }
+    }
+
     static let iconLabelTexts: [String: TextEntry] = Dictionary(uniqueKeysWithValues:
         iconDefinitions.map { ($0.key + ".label", TextEntry($0.labelFR, $0.labelEN)) })
 

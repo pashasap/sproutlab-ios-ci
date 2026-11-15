@@ -48,10 +48,11 @@ struct TrailView: View {
     }
 
     private func laneColumn(_ lane: TrailLane) -> some View {
-        VStack(spacing: 16) {
+        let header = TrailLaneHeaders.header(forTrack: lane.track, language: app.language)
+        return VStack(spacing: 16) {
             HStack(spacing: 8) {
-                Image(systemName: ChromeCatalog.symbolName(for: .math)).accessibilityHidden(true)
-                Text(ChromeCatalog.icon(.math, language: app.language).accessibilityLabel)
+                Image(systemName: header.symbolName).accessibilityHidden(true)
+                Text(header.title)
                 Spacer(minLength: 0)
             }
             .font(.headline)
