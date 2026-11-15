@@ -1,0 +1,73 @@
+name: SproutLab
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  Core:
+    type: library.static
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: ../Core/Sources/Core
+    settings:
+      base:
+        PRODUCT_NAME: Core
+        SWIFT_VERSION: "6.0"
+        SWIFT_ENABLE_EXPLICIT_MODULES: NO
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+        SWIFT_COMPILATION_MODE: wholemodule
+  SproutLab:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: ../Sources/App
+      # CI-only: SwiftPM's generated Bundle.module does not exist in an Xcode app target.
+      - path: Shims
+    dependencies:
+      - target: Core
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.SproutLab
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "6.0"
+        SWIFT_ENABLE_EXPLICIT_MODULES: NO
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+        SWIFT_COMPILATION_MODE: wholemodule
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: SproutLab
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_IDENTITY: ""
+  SproutLabUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: UITests
+    dependencies:
+      - target: SproutLab
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.SproutLab.uitests
+        TEST_TARGET_NAME: SproutLab
+        SWIFT_VERSION: "5.0"
+        SWIFT_ENABLE_EXPLICIT_MODULES: NO
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_IDENTITY: ""
+schemes:
+  SproutLab:
+    build:
+      targets:
+        Core: all
+        SproutLab: all
+        SproutLabUITests: [test]
+    test:
+      targets:
+        - SproutLabUITests
