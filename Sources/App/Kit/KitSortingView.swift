@@ -31,7 +31,11 @@ struct KitSortingView: View {
     @ViewBuilder
     private func content(for target: KitTapTarget) -> some View {
         if case .tapBin(let index) = target.command, sorting.bins.indices.contains(index) {
-            Image(systemName: sorting.bins[index].iconKey).foregroundStyle(Palette.accent)
+            if sorting.bins[index].named {
+                Text(sorting.binWhat(at: index, language: language)).foregroundStyle(Palette.accent)
+            } else {
+                Image(systemName: sorting.bins[index].iconKey).foregroundStyle(Palette.accent)
+            }
         } else if target.command == .undo {
             Image(systemName: ChromeCatalog.symbolName(for: .back))
         } else {

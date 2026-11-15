@@ -103,6 +103,8 @@ extension TextTable {
         "kit.action.reveal": TextEntry("Montrer l'image", "Show the picture"),
         "kit.action.reset": TextEntry("Recommencer", "Start again"),
         "kit.bin.label": TextEntry("Ranger ici : {what}", "Put here: {what}"),
+        "kit.bin.uses.what": TextEntry("les sons du mot", "the sounds in the word"),
+        "kit.bin.avoids.what": TextEntry("les sons qui ne sont pas dans le mot", "the sounds not in the word"),
         "kit.bin.fallback": TextEntry("Boîte", "Bin"),
         "kit.say.selected": TextEntry("Choisi", "Picked"),
         "kit.say.placed": TextEntry("Placé", "Placed"),

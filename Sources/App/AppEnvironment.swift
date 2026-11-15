@@ -12,13 +12,22 @@ final class AppEnvironment {
     var launchSeconds: Double = 0
     private let started = ProcessInfo.processInfo.systemUptime
 
-    init() {
+    /// Set only by the `-auditStop` launch argument; nil leaves the app as it always was.
+    let audit: AuditLaunch?
+
+    init(audit: AuditLaunch? = nil) {
         let music = MusicPlayer()
         let speech = SpeechAdapter()
         let base = URL.applicationSupportDirectory
-        let store = FileProgressStore(url: base.appendingPathComponent("progress.json"))
+        let store: any ProgressStore
+        switch audit?.storeKind {
+        case .inMemory: store = InMemoryProgressStore()
+        case .file, nil: store = FileProgressStore(url: base.appendingPathComponent("progress.json"))
+        }
+        let fixedSeed = audit?.seed
         let services = Services(speech: speech, audio: music, haptics: HapticsAdapter(),
-                                nextSeed: { UInt64.random(in: 0...UInt64.max) })
+                                nextSeed: { fixedSeed ?? UInt64.random(in: 0...UInt64.max) })
+        self.audit = audit
         self.music = music
         self.speech = speech
         self.store = store
@@ -27,8 +36,24 @@ final class AppEnvironment {
 
     func didLaunch() {
         app.launch()
+        if let audit { openAuditStop(audit) }
         frames.start()
         launchSeconds = ProcessInfo.processInfo.systemUptime - started
+    }
+
+    /// Opens the screen the audit state names; music stays off and nothing touches the network.
+    private func openAuditStop(_ audit: AuditLaunch) {
+        app.setMusic(audit.musicOn)
+        switch audit.state.screen {
+        case .welcome: break
+        case .trail: app.play()
+        case .round, .summary:
+            app.play()
+            if !audit.state.levelId.isEmpty { app.startLevel(audit.state.levelId) }
+        case .terrarium: app.openTerrarium()
+        case .diagnostics: app.setDiagnosticsVisible(true)
+        case .gallery, .journal: app.play()
+        }
     }
 
     /// The terrarium sheet content for the current save, wired to the real audio.

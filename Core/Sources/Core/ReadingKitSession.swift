@@ -59,8 +59,7 @@ struct ReadingKitSession {
     }
 
     private static func sortingState(_ item: ReadingBankItem) -> State? {
-        let icons = [ChromeCatalog.symbolName(for: .check), ChromeCatalog.symbolName(for: .back)]
-        return (try? KitSorting(tokens: item.palette, binIcons: icons)).map { .sorting($0) }
+        (try? KitSorting(tokens: item.palette, binLabelKeys: item.sortingBinKeys)).map { .sorting($0) }
     }
 
     var presentation: ReadingKitPresentation {
@@ -171,6 +170,11 @@ struct ReadingKitSession {
         }
         return .pending
     }
+}
+
+extension ReadingBankItem {
+    /// Text keys naming the two sorting bins: the sounds the word uses, then the sounds it does not.
+    var sortingBinKeys: [String] { ["kit.bin.uses.what", "kit.bin.avoids.what"] }
 }
 
 extension RoundViewModel {

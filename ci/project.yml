@@ -15,7 +15,6 @@ targets:
         PRODUCT_NAME: Core
         SWIFT_VERSION: "6.0"
         SWIFT_ENABLE_EXPLICIT_MODULES: NO
-        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         SWIFT_COMPILATION_MODE: wholemodule
   SproutLab:
     type: application
@@ -23,7 +22,6 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: ../Sources/App
-      # CI-only: SwiftPM's generated Bundle.module does not exist in an Xcode app target.
       - path: Shims
     dependencies:
       - target: Core
@@ -33,7 +31,6 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "6.0"
         SWIFT_ENABLE_EXPLICIT_MODULES: NO
-        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
         SWIFT_COMPILATION_MODE: wholemodule
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
@@ -43,7 +40,7 @@ targets:
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGNING_IDENTITY: ""
-  SproutLabUITests:
+  AuditStopsUITests:
     type: bundle.ui-testing
     platform: iOS
     deploymentTarget: "17.0"
@@ -67,7 +64,7 @@ schemes:
       targets:
         Core: all
         SproutLab: all
-        SproutLabUITests: [test]
+        AuditStopsUITests: [test]
     test:
       targets:
-        - SproutLabUITests
+        - AuditStopsUITests

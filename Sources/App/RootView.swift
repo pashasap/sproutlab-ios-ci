@@ -19,6 +19,22 @@ private struct ContentHeightKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
+/// Under an audit launch: the root identifier from the Core value and no animations. Otherwise unchanged.
+private struct AuditRoot: ViewModifier {
+    let launch: AuditLaunch?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let launch {
+            content
+                .accessibilityIdentifier(launch.root)
+                .transaction { $0.disablesAnimations = !launch.animationsEnabled }
+        } else {
+            content
+        }
+    }
+}
+
 struct RootView: View {
     let environment: AppEnvironment
     @State private var contentHeight: CGFloat = 0
@@ -39,6 +55,7 @@ struct RootView: View {
             }
         }
         .background(Palette.background.ignoresSafeArea())
+        .modifier(AuditRoot(launch: environment.audit))
         .sheet(isPresented: Binding(get: { app.diagnosticsVisible },
                                     set: { app.setDiagnosticsVisible($0) })) {
             DiagnosticsSheet(model: environment.diagnostics, language: app.language)

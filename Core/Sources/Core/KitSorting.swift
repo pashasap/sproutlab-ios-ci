@@ -3,6 +3,14 @@ import Foundation
 public struct KitSortBin: Sendable, Equatable {
     public let iconKey: String
     public internal(set) var tokens: [String]
+    /// True when `iconKey` is a text key naming the bin's content rather than a symbol.
+    public let named: Bool
+
+    init(iconKey: String, tokens: [String], named: Bool = false) {
+        self.iconKey = iconKey
+        self.tokens = tokens
+        self.named = named
+    }
 }
 
 /// Sorting: pick an unsorted token, tap a bin to put it there, tap a sorted token to take it back.
@@ -20,6 +28,14 @@ public struct KitSorting: KitComponent {
     public private(set) var announcements: [KitAnnouncement] = []
     private var history: [Step] = []
 
+    /// Bins named by text keys from the reading content (each key is a `TextTable` entry saying what goes in the bin).
+    public init(tokens: [String], binLabelKeys: [String]) throws {
+        guard (2...3).contains(binLabelKeys.count) else { throw KitError.binCount(binLabelKeys.count) }
+        for key in binLabelKeys where TextTable.entries[key] == nil { throw KitError.unknownIcon(key) }
+        bins = binLabelKeys.map { KitSortBin(iconKey: $0, tokens: [], named: true) }
+        unsorted = tokens
+    }
+
     public init(tokens: [String], binIcons: [String]) throws {
         guard (2...3).contains(binIcons.count) else { throw KitError.binCount(binIcons.count) }
         let allowed = Set(ChromeCatalog.allSymbolNames)
@@ -34,20 +50,28 @@ public struct KitSorting: KitComponent {
     /// Spoken label of a bin, independent of the selection; never empty.
     public func binLabel(at index: Int, language: Language) -> String {
         let template = TextTable.string("kit.bin.label", language)
+        let what = binWhat(at: index, language: language)
+        if what.isEmpty {
+            return TextTable.string("kit.bin.fallback", language) + " \(index + 1)"
+        }
+        return template.replacingOccurrences(of: "{what}", with: what)
+    }
+
+    /// What the bin holds, in words; empty when the bin has no name.
+    public func binWhat(at index: Int, language: Language) -> String {
         var what = ""
         if bins.indices.contains(index) {
             let key = bins[index].iconKey
             let labelKey = key + ".label"
-            if TextTable.entries[labelKey] != nil || TextTable.iconLabel(labelKey) != nil {
+            if bins[index].named {
+                what = TextTable.string(key, language)
+            } else if TextTable.entries[labelKey] != nil || TextTable.iconLabel(labelKey) != nil {
                 what = TextTable.string(labelKey, language)
             } else if let entry = TextTable.iconLabel(forSymbol: key) {
                 what = language == .fr ? entry.fr : entry.en
             }
         }
-        if what.isEmpty {
-            return TextTable.string("kit.bin.fallback", language) + " \(index + 1)"
-        }
-        return template.replacingOccurrences(of: "{what}", with: what)
+        return what
     }
 
     public var complete: Bool { unsorted.isEmpty }
