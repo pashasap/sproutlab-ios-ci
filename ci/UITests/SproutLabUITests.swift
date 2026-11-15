@@ -1,11 +1,17 @@
 import XCTest
 
-/// V12 acceptance audit (iPhone). Every PNG is written straight to the host disk (/tmp/v12shots) as it is taken.
+/// v22 acceptance audit. Every PNG is written straight to the host disk (/tmp/slshots) as it is taken.
 /// No test taps the ear (the CI simulator may have no TTS voices). Rounds answer from the stimulus value first,
 /// then try the remaining choices (unlimited retries, no penalty), so no answer key is needed.
-/// Steps run in priority order: a job cutoff that stops the test still leaves the most important pixels.
+/// The host watches the log for "REQUEST <what>" and touches /tmp/slctl/<what>-ok when done
+/// (dark, light, xl, seed = mark reading R1 and R2 completed in the saved progress so R2/R3 open).
 final class SproutLabUITests: XCTestCase {
     override func setUpWithError() throws { continueAfterFailure = true }
+
+    static let levelIds = ["math-bonds-10", "math-add-sub-20", "math-patterns-20",
+                           "reading-fr-r1", "reading-fr-r2", "reading-fr-r3"]
+
+    // MARK: - iPhone
 
     @MainActor
     func testA_Phone() throws {
@@ -13,165 +19,336 @@ final class SproutLabUITests: XCTestCase {
         var app = XCUIApplication()
         app.launch()
         XCTAssertTrue(playButton(app).waitForExistence(timeout: 60), "welcome")
-        switchToEnglish(app)
-        chrome(app, "A01"); titles(app, "A01"); frames(app, "A01")
-        shot("A01-home-light")
+        chrome(app, "P01"); frames(app, "P01")
+        shot("P01-welcome-fr-light")
 
-        // Trail: three levels, states and identities.
         playButton(app).tap()
         _ = level(app, "math-bonds-10").waitForExistence(timeout: 10)
-        tiles(app, "A02"); frames(app, "A02")
-        shot("A02-trail-light")
+        tiles(app, "P02"); frames(app, "P02")
+        shot("P02-trail-fr-light")
+        app.swipeUp(); sleep(1); tiles(app, "P03"); shot("P03-trail-fr-scrolled")
+        app.swipeDown(); sleep(1)
 
-        // Round 1: bonds to 10, summary, star button, terrarium, kill on the summary.
+        // Math round 1: counting and make 10, every question shot.
         level(app, "math-bonds-10").tap()
-        playRound(app, tag: "R1", shotEach: false)
-        chrome(app, "A09"); frames(app, "A09")
-        let before = starLabel(app)
-        note("R1 summary star button label='\(before)' frame=\(el(app, "sproutlab.terrarium.open").frame)")
-        shot("A09-summary-light")
-        el(app, "sproutlab.terrarium.open").tap(); sleep(1)
-        note("after star tap: terrarium=\(el(app, "sproutlab.terrarium").exists) panL=\(el(app, "sproutlab.pan.left").exists)")
-        frames(app, "A10")
-        shot("A10-star-button-opens")
-        dismissSheet(app)
-        note("after dismiss: summary=\(summaryVisible(app, wait: 1)) star='\(starLabel(app))'")
-        shot("A11-summary-after-sheet")
-        app.terminate()                                   // v5 defect (a): kill while on the summary
+        playRound(app, tag: "M1")
+        chrome(app, "M1S"); frames(app, "M1S")
+        shot("M1-summary")
+
+        // Star button -> terrarium, dial, pan, resident, journal.
+        terrariumTour(app, tag: "G", full: true)
+        leaveSummary(app)
+
+        // Math rounds 2 and 3.
+        tapLevel(app, "math-add-sub-20")
+        playRound(app, tag: "M2")
+        shot("M2-summary"); leaveSummary(app)
+        tapLevel(app, "math-patterns-20")
+        playRound(app, tag: "M3")
+        shot("M3-summary"); leaveSummary(app)
+        tiles(app, "P04"); shot("P04-trail-after-math")
+
+        // Reading R1 (open from the start).
+        app.swipeUp(); sleep(1)
+        tiles(app, "P05"); shot("P05-trail-reading-lane")
+        tapLevel(app, "reading-fr-r1")
+        playRound(app, tag: "R1")
+        if summaryVisible(app, wait: 1) { shot("R1-summary"); leaveSummary(app) }
+
+        // Unlock R2 and R3 through the saved file (host), then play them.
+        app.terminate()
+        request("seed")
         app = XCUIApplication(); app.launch()
         _ = playButton(app).waitForExistence(timeout: 30)
-        note("RELAUNCH star before kill='\(before)' after='\(starLabel(app))'")
-        chrome(app, "A12")
-        shot("A12-home-after-kill")
         playButton(app).tap(); _ = level(app, "math-bonds-10").waitForExistence(timeout: 10)
-        tiles(app, "A13")
-        shot("A13-trail-after-kill")
+        app.swipeUp(); sleep(1)
+        tiles(app, "P06"); shot("P06-trail-after-seed")
+        for (id, tag) in [("reading-fr-r2", "R2"), ("reading-fr-r3", "R3")] {
+            tapLevel(app, id)
+            playRound(app, tag: tag)
+            if summaryVisible(app, wait: 1) { shot("\(tag)-summary"); leaveSummary(app) }
+        }
 
-        // Landscape (v5 defect b): trail, home; frames prove clipping (negative y).
-        XCUIDevice.shared.orientation = .landscapeLeft; sleep(2)
-        chrome(app, "L01"); frames(app, "L01")
-        shot("L01-trail-landscape")
-        titleTarget(app, preferText: true).tap(); _ = playButton(app).waitForExistence(timeout: 5)
-        chrome(app, "L02"); titles(app, "L02"); hierarchy(app, "L02")
-        shot("L02-home-landscape")
-        playButton(app).tap(); _ = level(app, "math-add-sub-20").waitForExistence(timeout: 5)
-        level(app, "math-add-sub-20").tap()
-        _ = el(app, "sproutlab.back").waitForExistence(timeout: 5)
-        chrome(app, "L03"); frames(app, "L03")
-        shot("L03-question-landscape")
-        XCUIDevice.shared.orientation = .portrait; sleep(2)
-
-        // Round 2: add and take away within 20 (continues the landscape-started round).
-        playRound(app, tag: "R2", shotEach: true)
-        shot("R2-summary")
-        leaveSummary(app)
-
-        // Round 3: patterns and comparison within 20.
-        _ = level(app, "math-patterns-20").waitForExistence(timeout: 5)
-        tiles(app, "A30")
-        shot("A30-trail-after-r2")
-        level(app, "math-patterns-20").tap()
-        playRound(app, tag: "R3", shotEach: true)
-        shot("R3-summary")
-        leaveSummary(app)
-        tiles(app, "A31")
-        shot("A31-trail-after-r3")
-
-        // Diagnostics hold and the creature gallery.
-        titleTarget(app, preferText: false).press(forDuration: 3.5); sleep(1)
-        note("after hold: diagnostics=\(diagnosticsOpen(app)) trail=\(level(app, "math-bonds-10").exists)")
-        shot("A40-diagnostics")
-        let gallery = app.buttons["Gallery"]
+        // Sound control and diagnostics.
+        app.swipeDown(); sleep(1)
+        let music = el(app, "sproutlab.music")
+        note("music before label='\(music.label)'")
+        music.tap(); sleep(1)
+        note("music after label='\(music.label)' selected=\(music.isSelected)")
+        shot("U01-music-on")
+        music.tap(); sleep(1)
+        titleTarget(app).press(forDuration: 3.5); sleep(1)
+        note("after hold: diagnostics=\(app.staticTexts["Diagnostics"].exists) trail=\(level(app, "math-bonds-10").exists)")
+        frames(app, "D01")
+        shot("D01-diagnostics")
+        let gallery = app.buttons.matching(NSPredicate(format: "label IN %@", ["Galerie", "Gallery"])).firstMatch
         if gallery.waitForExistence(timeout: 2) {
             gallery.tap(); sleep(2)
-            frames(app, "A41")
-            shot("A41-gallery-1")
-            app.swipeUp(); sleep(1); shot("A42-gallery-2")
-            app.swipeUp(); sleep(1); shot("A43-gallery-3")
-            app.swipeUp(); sleep(1); shot("A44-gallery-4")
-            app.buttons["Close"].firstMatch.tap(); sleep(1)
+            shot("D02-gallery-1")
+            app.swipeUp(); sleep(1); shot("D03-gallery-2")
+            closeButton(app).tap(); sleep(1)
         } else { note("gallery button ABSENT") }
-        closeDiagnostics(app)
-        titleTarget(app, preferText: false).tap()
-        note("tap home: home=\(playButton(app).waitForExistence(timeout: 5)) diagnostics=\(diagnosticsOpen(app))")
+        if closeButton(app).exists { closeButton(app).tap(); sleep(1) } else { dismissSheet(app) }
+        titleTarget(app).tap(); sleep(1)
+        note("tap home: home=\(playButton(app).waitForExistence(timeout: 5))")
+        shot("P07-home-after-title-tap")
 
-        // Larger Text accessibility XL (v5 defect c): relaunch.
+        // English: trail and one question of each math kind.
+        let en = app.buttons["Anglais"]
+        if en.waitForExistence(timeout: 2) { en.tap(); sleep(1) } else { note("EN segment ABSENT") }
+        playButton(app).tap(); _ = level(app, "math-bonds-10").waitForExistence(timeout: 10)
+        shot("E01-trail-en")
+        for id in ["math-bonds-10", "math-add-sub-20", "math-patterns-20"] {
+            tapLevel(app, id)
+            note("E \(id) prompt='\(promptText(app))' stimulus=\(stimulusValue(app))")
+            shot("E-\(id)-q1")
+            back(app)
+        }
+        let fr = app.buttons["French"]
+        if fr.waitForExistence(timeout: 2) { fr.tap(); sleep(1) }
+
+        // Landscape: trail, question, terrarium.
+        XCUIDevice.shared.orientation = .landscapeLeft; sleep(2)
+        chrome(app, "L01"); frames(app, "L01"); shot("L01-trail-landscape")
+        tapLevel(app, "math-add-sub-20")
+        chrome(app, "L02"); frames(app, "L02"); shot("L02-question-landscape")
+        app.swipeUp(); sleep(1); shot("L03-question-landscape-scrolled")
+        back(app)
+        el(app, "sproutlab.terrarium.open").tap(); sleep(2)
+        frames(app, "L04"); shot("L04-terrarium-landscape")
+        closeTerrarium(app)
+        XCUIDevice.shared.orientation = .portrait; sleep(2)
+
+        // Larger Text (accessibility XL): relaunch.
         app.terminate()
         request("xl")
         let large = XCUIApplication()
         large.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"]
         large.launch()
         _ = playButton(large).waitForExistence(timeout: 30)
-        chrome(large, "C01"); titles(large, "C01"); hierarchy(large, "C01")
-        shot("C01-home-xl")
-        playButton(large).tap(); _ = level(large, "math-bonds-10").waitForExistence(timeout: 5)
-        tiles(large, "C02"); frames(large, "C02")
-        shot("C02-trail-xl")
-        large.swipeUp(); sleep(1); shot("C03-trail-xl-scrolled")
-        large.swipeDown(); sleep(1)
-        level(large, "math-add-sub-20").tap()
-        _ = el(large, "sproutlab.back").waitForExistence(timeout: 5)
-        chrome(large, "C04"); frames(large, "C04")
-        shot("C04-question-xl")
-        el(large, "sproutlab.back").tap(); sleep(1)
+        chrome(large, "X01"); frames(large, "X01"); shot("X01-welcome-xl")
+        playButton(large).tap(); _ = level(large, "math-bonds-10").waitForExistence(timeout: 10)
+        tiles(large, "X02"); frames(large, "X02"); shot("X02-trail-xl")
+        large.swipeUp(); sleep(1); shot("X03-trail-xl-scrolled")
+        large.swipeUp(); sleep(1); shot("X04-trail-xl-scrolled-2")
+        large.swipeDown(); large.swipeDown(); sleep(1)
+        tapLevel(large, "math-bonds-10")
+        frames(large, "X05"); shot("X05-question-xl")
+        large.swipeUp(); sleep(1); shot("X06-question-xl-scrolled")
+        back(large)
+        tapLevel(large, "reading-fr-r1")
+        frames(large, "X07"); shot("X07-reading-xl")
+        back(large)
 
-        // Dark (live appearance switch by the host).
+        // Dark (live switch by the host).
         request("dark")
-        shot("B01-trail-dark")
-        level(large, "math-patterns-20").tap()
-        _ = el(large, "sproutlab.back").waitForExistence(timeout: 5)
-        shot("B02-question-dark-xl")
-        el(large, "sproutlab.back").tap(); sleep(1)
-        el(large, "sproutlab.terrarium.open").tap(); sleep(1)
-        shot("B03-star-sheet-dark")
+        shot("K01-trail-dark")
+        tapLevel(large, "math-patterns-20")
+        shot("K02-question-dark-xl")
+        back(large)
+        tapLevel(large, "reading-fr-r2")
+        shot("K03-reading-dark-xl")
+        back(large)
+        terrariumTour(large, tag: "K", full: false)
         note("DONE")
+    }
+
+    // MARK: - iPad
+
+    @MainActor
+    func testB_Pad() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(playButton(app).waitForExistence(timeout: 60), "welcome")
+        chrome(app, "I01"); titles(app, "I01"); shot("I01-welcome-ipad")
+        playButton(app).tap(); _ = level(app, "math-bonds-10").waitForExistence(timeout: 10)
+        tiles(app, "I02"); frames(app, "I02"); shot("I02-trail-ipad")
+        tapLevel(app, "math-bonds-10")
+        playRound(app, tag: "IM1")
+        shot("I03-summary-ipad")
+        terrariumTour(app, tag: "IG", full: true)
+        leaveSummary(app)
+        XCUIDevice.shared.orientation = .landscapeLeft; sleep(2)
+        chrome(app, "I04"); frames(app, "I04"); shot("I04-trail-ipad-landscape")
+        tapLevel(app, "math-add-sub-20")
+        frames(app, "I05"); shot("I05-question-ipad-landscape")
+        back(app)
+        tapLevel(app, "reading-fr-r1")
+        playRound(app, tag: "IR1", maxQuestions: 2)
+        back(app)
+        el(app, "sproutlab.terrarium.open").tap(); sleep(2)
+        frames(app, "I06"); shot("I06-terrarium-ipad-landscape")
+        closeTerrarium(app)
+        request("dark")
+        shot("I07-trail-ipad-landscape-dark")
+        tapLevel(app, "math-patterns-20")
+        shot("I08-question-ipad-dark")
+        back(app)
+        XCUIDevice.shared.orientation = .portrait; sleep(2)
+        titleTarget(app).press(forDuration: 3.5); sleep(1)
+        shot("I09-diagnostics-ipad")
+        note("DONE")
+    }
+
+    // MARK: - Terrarium tour
+
+    @MainActor
+    private func terrariumTour(_ app: XCUIApplication, tag: String, full: Bool) {
+        let open = el(app, "sproutlab.terrarium.open")
+        note("\(tag) star button label='\(open.label)' frame=\(open.frame)")
+        open.tap(); sleep(2)
+        let garden = el(app, "sproutlab.terrarium")
+        note("\(tag) terrarium=\(garden.exists) panL=\(el(app, "sproutlab.pan.left").exists) journal=\(el(app, "sproutlab.journal").exists)")
+        frames(app, "\(tag)01")
+        shot("\(tag)01-terrarium")
+        let dial = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ OR label BEGINSWITH %@",
+                                                    "Cadran", "Sun and moon")).firstMatch
+        if dial.exists {
+            for i in 2...(full ? 5 : 3) { dial.tap(); sleep(1); shot("\(tag)0\(i)-dial-\(i - 1)") }
+        } else { note("\(tag) dial ABSENT") }
+        if full {
+            let right = el(app, "sproutlab.pan.right")
+            if right.exists { right.tap(); sleep(1); shot("\(tag)06-pan-right") }
+            let creatures = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sproutlab.creature.")).allElementsBoundByIndex
+            note("\(tag) creatures: " + creatures.map { "\($0.identifier)@\($0.frame) '\($0.label)'" }.joined(separator: " ; "))
+            if let c = creatures.first(where: { $0.isHittable }) { c.tap(); sleep(1); shot("\(tag)07-resident-tap") }
+            let welcome = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sproutlab.welcome.")).firstMatch
+            if welcome.exists { welcome.tap(); sleep(1); shot("\(tag)08-welcome-tap") } else { note("\(tag) no welcome control") }
+        }
+        let journal = el(app, "sproutlab.journal")
+        if journal.exists {
+            journal.tap(); sleep(2)
+            frames(app, "\(tag)09"); shot("\(tag)09-journal")
+            if full { app.swipeUp(); sleep(1); shot("\(tag)10-journal-scrolled") }
+            let jclose = el(app, "sproutlab.journal.close")
+            if jclose.exists { jclose.tap(); sleep(1) } else { note("\(tag) journal close ABSENT") }
+        } else { note("\(tag) journal ABSENT") }
+        closeTerrarium(app)
+        note("\(tag) after close: terrarium=\(el(app, "sproutlab.terrarium").exists) star='\(el(app, "sproutlab.terrarium.open").label)'")
+    }
+
+    @MainActor
+    private func closeTerrarium(_ app: XCUIApplication) {
+        let close = el(app, "sproutlab.terrarium.close")
+        if close.exists { close.tap(); sleep(1) } else { note("terrarium close ABSENT"); dismissSheet(app) }
+        if el(app, "sproutlab.terrarium.view").exists { dismissSheet(app) }
     }
 
     // MARK: - Round driver
 
     @MainActor
-    private func playRound(_ app: XCUIApplication, tag: String, shotEach: Bool) {
-        var lastQ = ""
+    private func playRound(_ app: XCUIApplication, tag: String, maxQuestions: Int = 5) {
+        var asked = 0
         var wrongShot = false
-        for _ in 0..<20 {
+        var lastQ = ""
+        for _ in 0..<12 {
             if summaryVisible(app, wait: 0) { break }
             guard el(app, "sproutlab.back").waitForExistence(timeout: 4) else { note("\(tag) no question"); break }
             let q = progressLabel(app)
-            let stim = stimulusValue(app)
-            let choices = choiceValues(app)
-            note("\(tag) \(q) prompt='\(promptLabel(app))' stimulus=\(stim) choices=\(choices)")
-            if shotEach && q != lastQ { shot("\(tag)-\(q.replacingOccurrences(of: " ", with: ""))") }
-            lastQ = q
-            let first = choices.firstIndex(of: expected(stim)) ?? 0
-            var order = [first] + (0..<3).filter { $0 != first }
+            if q != lastQ { asked += 1; lastQ = q }
+            if asked > maxQuestions { note("\(tag) stop after \(maxQuestions) questions"); return }
+            let kits = kitTargets(app)
+            note("\(tag) \(q) prompt='\(promptText(app))' stimulus=\(stimulusValue(app)) choices=\(choiceValues(app)) kit=\(kits.map { "\($0.identifier)'\($0.label)'" })")
+            frames(app, "\(tag)-\(q)")
+            shot("\(tag)-\(q.filter { $0.isNumber })")
             var advanced = false
-            while !order.isEmpty {
-                let i = order.removeFirst()
-                el(app, "sproutlab.choice.\(i)").tap()
-                usleep(600_000)
-                if summaryVisible(app, wait: 0) || progressLabel(app) != q { advanced = true; break }
-                note("\(tag) \(q) choice \(i) (\(choices[i])) wrong; feedback='\(feedback(app))'")
-                if shotEach && !wrongShot { shot("\(tag)-wrong-cue"); wrongShot = true }
+            if kits.isEmpty {
+                let choices = choiceValues(app)
+                let first = choices.firstIndex(of: expected(stimulusValue(app))) ?? 0
+                for i in [first] + (0..<choices.count).filter({ $0 != first }) {
+                    el(app, "sproutlab.choice.\(i)").tap()
+                    usleep(700_000)
+                    if summaryVisible(app, wait: 0) || progressLabel(app) != q { advanced = true; break }
+                    note("\(tag) \(q) choice \(i) wrong; feedback='\(feedback(app))'")
+                    if !wrongShot { shot("\(tag)-wrong-cue"); wrongShot = true }
+                }
+            } else {
+                advanced = solveKit(app, tag: tag, q: q)
             }
-            if !advanced { note("\(tag) \(q) no choice advanced") }
+            if !advanced {
+                note("\(tag) \(q) NOT ADVANCED; abandoning round")
+                shot("\(tag)-\(q.filter { $0.isNumber })-stuck")
+                back(app)
+                return
+            }
         }
-        note("\(tag) summary=\(summaryVisible(app, wait: 3)) star='\(starLabel(app))'")
+        note("\(tag) summary=\(summaryVisible(app, wait: 3)) star='\(el(app, "sproutlab.terrarium.open").label)'")
+    }
+
+    /// Kit items: ordering is solved from its known rotation; picture reveal and tile sets by trying each target;
+    /// slot boards and sorting get one demonstration tap pair and a screenshot.
+    @MainActor
+    private func solveKit(_ app: XCUIApplication, tag: String, q: String) -> Bool {
+        func moved() -> Bool { summaryVisible(app, wait: 0) || progressLabel(app) != q }
+        let ids = kitTargets(app).map { $0.identifier }
+        let n = ids.filter { $0.hasPrefix("sproutlab.kit.order.") }.count
+        if n >= 2 {
+            var taps = [n - 1]
+            if n >= 3 { taps += Array((0...(n - 3)).reversed()) }
+            for i in taps { el(app, "sproutlab.kit.order.\(i)").tap(); usleep(500_000) }
+            shot("\(tag)-\(q.filter { $0.isNumber })-ordered")
+            if moved() { return true }
+            note("\(tag) \(q) ordering not accepted after taps \(taps)")
+            return false
+        }
+        if ids.contains("sproutlab.kit.begin") || ids.contains(where: { $0.hasPrefix("sproutlab.kit.answer.") }) {
+            for k in 0..<5 {
+                if el(app, "sproutlab.kit.reset").exists { el(app, "sproutlab.kit.reset").tap(); usleep(400_000) }
+                if el(app, "sproutlab.kit.begin").exists { el(app, "sproutlab.kit.begin").tap(); usleep(500_000) }
+                if k == 0 { shot("\(tag)-\(q.filter { $0.isNumber })-answering") }
+                let a = el(app, "sproutlab.kit.answer.\(k)")
+                guard a.exists else { break }
+                a.tap(); usleep(900_000)
+                if k == 0 { shot("\(tag)-\(q.filter { $0.isNumber })-revealed") }
+                if moved() { return true }
+            }
+            return moved()
+        }
+        let tileCount = ids.filter { $0.hasPrefix("sproutlab.kit.tile.") }.count
+        if tileCount > 0 {
+            for i in 0..<tileCount {
+                let t = el(app, "sproutlab.kit.tile.\(i)")
+                if t.exists { t.tap(); usleep(700_000) }
+                if i == 0 { shot("\(tag)-\(q.filter { $0.isNumber })-tile-tap") }
+                if moved() { return true }
+            }
+            return moved()
+        }
+        // Slot board or sorting: demonstrate one placement and stop.
+        if el(app, "sproutlab.kit.palette.0").exists && el(app, "sproutlab.kit.slot.0").exists {
+            el(app, "sproutlab.kit.palette.0").tap(); usleep(400_000)
+            shot("\(tag)-\(q.filter { $0.isNumber })-picked")
+            el(app, "sproutlab.kit.slot.0").tap(); usleep(500_000)
+            shot("\(tag)-\(q.filter { $0.isNumber })-placed")
+        } else if el(app, "sproutlab.kit.unsorted.0").exists && el(app, "sproutlab.kit.bin.0").exists {
+            el(app, "sproutlab.kit.unsorted.0").tap(); usleep(400_000)
+            shot("\(tag)-\(q.filter { $0.isNumber })-picked")
+            el(app, "sproutlab.kit.bin.0").tap(); usleep(500_000)
+            shot("\(tag)-\(q.filter { $0.isNumber })-binned")
+        }
+        note("\(tag) \(q) kit after demo: " + kitTargets(app).map { "\($0.identifier)'\($0.label)'" }.joined(separator: " ; "))
+        return moved()
     }
 
     private func expected(_ stim: String) -> String {
         let nums = stim.split(whereSeparator: { !$0.isNumber }).map(String.init)
-        if stim.contains("crossed") { return nums.first ?? "?" }
-        if stim.contains("filled") && stim.contains("empty") { return nums.count > 1 ? nums[1] : "?" }
-        if stim.contains(" and ") && nums.count > 1 { return String((Int(nums[0]) ?? 0) + (Int(nums[1]) ?? 0)) }
+        if stim.contains("crossed") || stim.contains("barr") { return nums.first ?? "?" }
+        if (stim.contains("filled") && stim.contains("empty")) || (stim.contains("rempli") && stim.contains("vide")) {
+            return nums.count > 1 ? nums[1] : "?"
+        }
+        if (stim.contains(" and ") || stim.contains(" et ")) && nums.count > 1 {
+            return String((Int(nums[0]) ?? 0) + (Int(nums[1]) ?? 0))
+        }
         return nums.first ?? "?"
     }
 
-    // MARK: - Host handshake (appearance, content size)
+    // MARK: - Host handshake
 
     private func request(_ what: String) {
-        let ok = URL(fileURLWithPath: "/tmp/v12ctl/\(what)-ok")
+        let ok = URL(fileURLWithPath: "/tmp/slctl/\(what)-ok")
         note("REQUEST \(what)")
-        for _ in 0..<20 where !FileManager.default.fileExists(atPath: ok.path) { usleep(500_000) }
+        for _ in 0..<30 where !FileManager.default.fileExists(atPath: ok.path) { usleep(500_000) }
         note("REQUEST \(what) acknowledged=\(FileManager.default.fileExists(atPath: ok.path))")
         sleep(1)
     }
@@ -179,10 +356,14 @@ final class SproutLabUITests: XCTestCase {
     // MARK: - Helpers
 
     @MainActor
-    private func titleTarget(_ app: XCUIApplication, preferText: Bool) -> XCUIElement {
+    private func kitTargets(_ app: XCUIApplication) -> [XCUIElement] {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sproutlab.kit.")).allElementsBoundByIndex
+    }
+
+    @MainActor
+    private func titleTarget(_ app: XCUIApplication) -> XCUIElement {
         let all = app.descendants(matching: .any).matching(identifier: "sproutlab.title").allElementsBoundByIndex
         if all.isEmpty { return el(app, "sproutlab.icon") }
-        if preferText { return all.max(by: { $0.frame.width < $1.frame.width })! }
         return all.min(by: { $0.frame.width < $1.frame.width })!
     }
 
@@ -192,34 +373,22 @@ final class SproutLabUITests: XCTestCase {
         note("titles \(tag): title x\(all.count) " + all.map { "\($0.elementType.rawValue)@\($0.frame) '\($0.label)'" }.joined(separator: " , "))
     }
 
-    /// Accessibility hierarchy dump (VoiceOver reading order evidence).
-    @MainActor
-    private func hierarchy(_ app: XCUIApplication, _ tag: String) {
-        note("hierarchy \(tag): " + app.debugDescription.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: " || "))
-    }
-
     @MainActor
     private func frames(_ app: XCUIApplication, _ tag: String) {
         let lines = app.debugDescription.split(separator: "\n")
-            .filter { $0.contains("Button") || $0.contains("StaticText") || $0.contains("Window") || $0.contains("Image") || $0.contains("Other, identifier") }
+            .filter { $0.contains("Button") || $0.contains("StaticText") || $0.contains("Window") || $0.contains("Image") || $0.contains("identifier") }
             .map { $0.trimmingCharacters(in: .whitespaces) }
         note("frames \(tag): " + lines.joined(separator: " || "))
     }
 
     @MainActor
     private func tiles(_ app: XCUIApplication, _ tag: String) {
-        let ids = ["math-bonds-10", "math-add-sub-20", "math-patterns-20"]
-        note("tiles \(tag): " + ids.map { let t = level(app, $0); return t.exists ? "\($0)=\(t.frame) enabled=\(t.isEnabled) '\(t.label)'" : "\($0)=ABSENT" }.joined(separator: " ; "))
+        note("tiles \(tag): " + Self.levelIds.map { let t = level(app, $0); return t.exists ? "\($0)=\(t.frame) enabled=\(t.isEnabled) '\(t.label)'" : "\($0)=ABSENT" }.joined(separator: " ; "))
     }
 
     @MainActor
-    private func diagnosticsOpen(_ app: XCUIApplication) -> Bool { app.staticTexts["Diagnostics"].exists }
-
-    @MainActor
-    private func closeDiagnostics(_ app: XCUIApplication) {
-        let close = app.buttons["Close"].firstMatch
-        if close.exists { close.tap(); sleep(1); return }
-        if diagnosticsOpen(app) { dismissSheet(app) }
+    private func closeButton(_ app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label IN %@", ["Fermer", "Close"])).firstMatch
     }
 
     @MainActor
@@ -232,8 +401,28 @@ final class SproutLabUITests: XCTestCase {
 
     @MainActor
     private func leaveSummary(_ app: XCUIApplication) {
-        let b = app.buttons["Back to the trail"].firstMatch
+        let b = summaryButton(app)
         if b.exists { b.tap(); sleep(1) } else { note("summary back ABSENT") }
+    }
+
+    @MainActor
+    private func back(_ app: XCUIApplication) {
+        let b = el(app, "sproutlab.back")
+        if b.exists { b.tap(); sleep(1) } else { note("round back ABSENT") }
+    }
+
+    /// Scrolls the trail until the level tile is hittable, then taps it and waits for the round.
+    @MainActor
+    private func tapLevel(_ app: XCUIApplication, _ id: String) {
+        let t = level(app, id)
+        if !t.waitForExistence(timeout: 5) { note("level \(id) ABSENT"); return }
+        var tries = 0
+        while !t.isHittable && tries < 4 { app.swipeUp(); usleep(500_000); tries += 1 }
+        tries = 0
+        while !t.isHittable && tries < 4 { app.swipeDown(); usleep(500_000); tries += 1 }
+        note("level \(id) enabled=\(t.isEnabled) '\(t.label)'")
+        t.tap()
+        if !el(app, "sproutlab.back").waitForExistence(timeout: 5) { note("level \(id) did not open a round") }
     }
 
     @MainActor
@@ -250,23 +439,20 @@ final class SproutLabUITests: XCTestCase {
     }
 
     @MainActor
-    private func summaryVisible(_ app: XCUIApplication, wait: TimeInterval) -> Bool {
-        let s = app.staticTexts.matching(NSPredicate(format: "label IN %@",
-            ["Great job, you did it!", "Bravo, tu as réussi !", "Three stars for you!", "Trois étoiles pour toi !"])).firstMatch
-        return wait > 0 ? s.waitForExistence(timeout: wait) : s.exists
+    private func summaryButton(_ app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label IN %@", ["Back to the trail", "Retour au sentier"])).firstMatch
     }
 
     @MainActor
-    private func switchToEnglish(_ app: XCUIApplication) {
-        let en = app.buttons["Anglais"]
-        if en.waitForExistence(timeout: 1.5) { en.tap(); usleep(500_000) }
-        note("EN now: \(app.buttons["English"].exists) selected=\(app.buttons["English"].isSelected)")
+    private func summaryVisible(_ app: XCUIApplication, wait: TimeInterval) -> Bool {
+        let s = summaryButton(app)
+        return wait > 0 ? s.waitForExistence(timeout: wait) : s.exists
     }
 
     @MainActor
     private func chrome(_ app: XCUIApplication, _ tag: String) {
         var parts: [String] = []
-        for id in ["sproutlab.title", "sproutlab.language", "sproutlab.music", "sproutlab.terrarium.open",
+        for id in ["sproutlab.title", "sproutlab.icon", "sproutlab.language", "sproutlab.music", "sproutlab.terrarium.open",
                    "sproutlab.back", "sproutlab.listen", "sproutlab.stimulus"] {
             let e = el(app, id)
             parts.append(e.exists ? "\(id)=\(e.frame) '\(e.label)'" : "\(id)=ABSENT")
@@ -281,16 +467,15 @@ final class SproutLabUITests: XCTestCase {
         return q.exists ? q.label : "-"
     }
 
+    /// All visible static texts except the progress line, joined: the prompt as the child sees it.
     @MainActor
-    private func promptLabel(_ app: XCUIApplication) -> String {
-        let p = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "?")).firstMatch
-        return p.exists ? p.label : "-"
+    private func promptText(_ app: XCUIApplication) -> String {
+        app.staticTexts.allElementsBoundByIndex.map { $0.label }.filter { !$0.hasPrefix("Question ") }.joined(separator: " | ")
     }
 
     @MainActor
     private func feedback(_ app: XCUIApplication) -> String {
-        let p = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "try again")).firstMatch
-        return p.exists ? p.label : "-"
+        promptText(app)
     }
 
     @MainActor
@@ -301,13 +486,7 @@ final class SproutLabUITests: XCTestCase {
 
     @MainActor
     private func choiceValues(_ app: XCUIApplication) -> [String] {
-        (0..<3).map { let c = el(app, "sproutlab.choice.\($0)"); return (c.value as? String) ?? c.label }
-    }
-
-    @MainActor
-    private func starLabel(_ app: XCUIApplication) -> String {
-        let s = el(app, "sproutlab.terrarium.open")
-        return s.exists ? s.label : "-"
+        (0..<3).compactMap { let c = el(app, "sproutlab.choice.\($0)"); return c.exists ? ((c.value as? String) ?? c.label) : nil }
     }
 
     private func note(_ line: String) {
@@ -318,7 +497,7 @@ final class SproutLabUITests: XCTestCase {
     @MainActor
     private func shot(_ name: String) {
         let png = XCUIScreen.main.screenshot().pngRepresentation
-        let dir = URL(fileURLWithPath: "/tmp/v12shots")
+        let dir = URL(fileURLWithPath: "/tmp/slshots")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         try? png.write(to: dir.appendingPathComponent("\(name).png"))
         note("shot \(name)")
