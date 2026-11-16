@@ -31,16 +31,14 @@ jobs:
           echo "JOB_T0=$T0" >> "$GITHUB_ENV"
           ( mkdir -p "$RUNNER_TEMP/xg" && curl -fsSL -o "$RUNNER_TEMP/xg/x.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip \
             && unzip -q -o "$RUNNER_TEMP/xg/x.zip" -d "$RUNNER_TEMP/xg" && touch "$RUNNER_TEMP/xg/ok" ) > "$RUNNER_TEMP/xg.log" 2>&1 &
-          XC=$(ls -d /Applications/Xcode_*.app | python3 -c "import sys,re; xs=[l.strip() for l in sys.stdin]; xs=[x for x in xs if 'beta' not in x.lower()] or xs; print(max(xs,key=lambda x:[int(n) for n in re.findall(r'\\d+',x.split('Xcode_')[1])]))")
+          mkdir -p ci/artifacts
+          XC=$(python3 ci/pick_xcode.py 2> ci/artifacts/xcodes.txt)
           sudo xcode-select -s "$XC/Contents/Developer"
           INFO=$(python3 ci/pick_device.py)
           IFS='|' read -r UDID NAME RT <<< "$INFO"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
-          mkdir -p ci/artifacts
-          # the simulator takes 3 to 4 minutes to boot on these runners: boot it while the app builds, wait in run_ui.sh
-          ( xcrun simctl boot "$UDID" > ci/artifacts/boot.log 2>&1; echo "boot command returned at $(( $(date +%s) - T0 )) s" >> ci/artifacts/boot.log ) &
-          echo "commit=${{ inputs.commit }} device=$NAME runtime=$RT $(xcodebuild -version | tr '\n' ' ')" > ci/artifacts/env.txt
-          cat ci/artifacts/env.txt
+          echo "commit=${{ inputs.commit }} device=$NAME runtime=$RT xcode=$XC $(xcodebuild -version | tr '\n' ' ')" > ci/artifacts/env.txt
+          cat ci/artifacts/env.txt ci/artifacts/xcodes.txt
 
       - name: Build
         timeout-minutes: 5

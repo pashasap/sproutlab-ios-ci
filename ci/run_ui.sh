@@ -16,7 +16,8 @@ STALL_S=${STALL_S:-45}; QUIET_S=${QUIET_S:-200}  # the notice below; the quiet w
 A=ci/artifacts; mkdir -p $A/stall /tmp/audit-stops
 XTR=$(ls ci/DD/Build/Products/*.xctestrun | head -1)
 RESULT=$A/result.xcresult
-# the workflow asked the simulator to boot while the app built; this waits for the rest of it
+# the simulator boots here, after the build: booting it during the build slowed the build from about 40 s to 5 minutes
+# and stalled it (public runs 43831317133, 43833664522, 43834818284); it takes 3 to 4 minutes
 xcrun simctl boot "$SIM_UDID" > /dev/null 2>&1
 xcrun simctl bootstatus "$SIM_UDID" -b > /dev/null
 echo "TIMING booted at $(( $(date +%s) - JOB_T0 ))s"
