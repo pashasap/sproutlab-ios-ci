@@ -8,10 +8,10 @@
 #        Upload (about 10 s) and the runner's own start and end (about 70 s): all inside 900 s.
 #   $2 = cutoff once a timeout was seen (the spindump and the runner restart cost 90 to 130 s). Collect then also
 #        exports from a finalized bundle and zips it (about 60 s): all inside 1200 s.
-# The cutoff stays a last resort; it asks xcodebuild to stop (SIGTERM, which it answers with `BUILD INTERRUPTED`) and
+# The cutoff stays a last resort and does not cut a run whose tests are all reported; it asks xcodebuild to stop (SIGTERM, which it answers with `BUILD INTERRUPTED`) and
 # waits up to FINALIZE_S for it to finalize the result bundle (FINALIZE_TIMEOUT_S after the last test when one timed out).
 set +e
-CUTOFF=$1; EXTENDED=${2:-$1}; FINALIZE_S=${FINALIZE_S:-25}; FINALIZE_TIMEOUT_S=${FINALIZE_TIMEOUT_S:-90}
+CUTOFF=$1; EXTENDED=${2:-$1}; FINALIZE_S=${FINALIZE_S:-25}; FINALIZE_TIMEOUT_S=${FINALIZE_TIMEOUT_S:-60}
 STALL_S=${STALL_S:-45}; QUIET_S=${QUIET_S:-200}  # the notice below; the quiet window after a timeout (the spindump)
 A=ci/artifacts; mkdir -p $A/stall /tmp/audit-stops
 XTR=$(ls ci/DD/Build/Products/*.xctestrun | head -1)
@@ -44,7 +44,11 @@ while kill -0 $pid 2>/dev/null; do
     timeout_at=$now; CUTOFF=$EXTENDED
     echo "OUTCOME a test timed out at $now s: the cutoff moves to $EXTENDED s" | tee -a $A/outcome.txt
   fi
-  if [ $now -gt $CUTOFF ]; then
+  # every stop is its own test: the run is over when the whole selection is reported, not when one test is
+  if [ $done_at -eq 0 ] && grep -qE "^Test Suite 'Selected tests' (passed|failed)" $A/test.log; then done_at=$i; fi
+  # once the whole selection is reported the cutoff no longer applies: the finalize wait below bounds the rest (public run
+  # 43858018610: the cutoff came 17 s after the last test, xcodebuild was cut while writing the spindump of the timed-out test)
+  if [ $now -gt $CUTOFF ] && [ $done_at -eq 0 ]; then
     echo "OUTCOME cutoff at $CUTOFF s" | tee -a $A/outcome.txt
     shot cutoff; break
   fi
@@ -53,11 +57,9 @@ while kill -0 $pid 2>/dev/null; do
     cp $A/test.log $A/test-stalled-start.log; kill $pid; sleep 2; kill -9 $pid 2>/dev/null
     pkill -f "xcodebuild test-without-building"; sleep 2; retried=1; i=0; start_test
   fi
-  # every stop is its own test: the run is over when the whole selection is reported, not when one test is
-  if [ $done_at -eq 0 ] && grep -qE "^Test Suite 'Selected tests' (passed|failed)" $A/test.log; then done_at=$i; fi
   # then xcodebuild finalizes the result bundle and exits by itself; give it time, then stop waiting. After a timeout it
-  # collects diagnostics first (it was still busy 36 s after the last test in public run 43831317133): wait longer, the
-  # extended cutoff still bounds this loop
+  # collects diagnostics first (it was still busy 36 s after the last test in public run 43831317133): wait longer (FINALIZE_TIMEOUT_S):
+  # the job's 20 minutes hold the extended cutoff plus this wait
   wait_s=$FINALIZE_S; [ $timeout_at -gt 0 ] && wait_s=$FINALIZE_TIMEOUT_S
   if [ $done_at -gt 0 ] && [ $((i - done_at)) -ge $wait_s ]; then break; fi
   cur=$(wc -l < $A/test.log)

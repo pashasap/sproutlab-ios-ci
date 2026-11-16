@@ -71,8 +71,8 @@ jobs:
         timeout-minutes: 18
         run: |
           set +e
-          # cutoff 760 s while no test timed out (the job then ends inside 15 minutes), 1040 s once one did (inside 20)
-          bash ci/run_ui.sh 760 1040
+          # cutoff 760 s while no test timed out (the job then ends inside 15 minutes), 980 s once one did (inside 20)
+          bash ci/run_ui.sh 760 980
           true
 
       - name: Collect
