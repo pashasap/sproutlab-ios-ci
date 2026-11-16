@@ -17,7 +17,9 @@ permissions:
 jobs:
   checkpoint:
     runs-on: xcode-27
-    timeout-minutes: 15
+    # Operator decision 2026-11-16, D-20261116-p-1: the run takes at most 15 minutes when no stop timed out, at most 20 when one did.
+    # run_ui.sh keeps to that with its two cutoffs; this is only the backstop above the 20-minute case.
+    timeout-minutes: 22
     steps:
       - uses: actions/checkout@v4
 
@@ -25,15 +27,18 @@ jobs:
         timeout-minutes: 2
         run: |
           set -euo pipefail
-          echo "JOB_T0=$(date +%s)" >> "$GITHUB_ENV"
+          T0=$(date +%s)
+          echo "JOB_T0=$T0" >> "$GITHUB_ENV"
           ( mkdir -p "$RUNNER_TEMP/xg" && curl -fsSL -o "$RUNNER_TEMP/xg/x.zip" https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip \
             && unzip -q -o "$RUNNER_TEMP/xg/x.zip" -d "$RUNNER_TEMP/xg" && touch "$RUNNER_TEMP/xg/ok" ) > "$RUNNER_TEMP/xg.log" 2>&1 &
-          XC=$(ls -d /Applications/Xcode_*.app | python3 -c "import sys,re; xs=[l.strip() for l in sys.stdin]; print(max(xs,key=lambda x:[int(n) for n in re.findall(r'\\d+',x.split('Xcode_')[1])]))")
+          XC=$(ls -d /Applications/Xcode_*.app | python3 -c "import sys,re; xs=[l.strip() for l in sys.stdin]; xs=[x for x in xs if 'beta' not in x.lower()] or xs; print(max(xs,key=lambda x:[int(n) for n in re.findall(r'\\d+',x.split('Xcode_')[1])]))")
           sudo xcode-select -s "$XC/Contents/Developer"
           INFO=$(python3 ci/pick_device.py)
           IFS='|' read -r UDID NAME RT <<< "$INFO"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
           mkdir -p ci/artifacts
+          # the simulator takes 3 to 4 minutes to boot on these runners: boot it while the app builds, wait in run_ui.sh
+          ( xcrun simctl boot "$UDID" > ci/artifacts/boot.log 2>&1; echo "boot command returned at $(( $(date +%s) - T0 )) s" >> ci/artifacts/boot.log ) &
           echo "commit=${{ inputs.commit }} device=$NAME runtime=$RT $(xcodebuild -version | tr '\n' ' ')" > ci/artifacts/env.txt
           cat ci/artifacts/env.txt
 
@@ -65,19 +70,21 @@ jobs:
           echo "TIMING build done at $(( $(date +%s) - JOB_T0 ))s"
 
       - name: Simulator and stops
-        timeout-minutes: 13
+        timeout-minutes: 18
         run: |
           set +e
-          bash ci/run_ui.sh 840
+          # cutoff 740 s while no test timed out (the job then ends inside 15 minutes), 1000 s once one did (inside 20)
+          bash ci/run_ui.sh 740 1000
           true
 
       - name: Collect
         if: always()
-        timeout-minutes: 1
+        timeout-minutes: 2
         run: |
           set +e
           A=ci/artifacts; mkdir -p $A/stops $A/crash
           cp /tmp/audit-stops/* $A/stops/ 2>/dev/null
+          bash ci/collect_timeouts.sh
           grep "^AUDIT " $A/test.log > $A/audit.txt
           APP=$(ls -d ci/*.xcodeproj | head -1); APP=$(basename "$APP" .xcodeproj)
           cp ~/Library/Logs/DiagnosticReports/"$APP"*.ips $A/crash/ 2>/dev/null
