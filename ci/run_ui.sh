@@ -22,6 +22,12 @@ xcrun simctl boot "$SIM_UDID" > /dev/null 2>&1
 xcrun simctl bootstatus "$SIM_UDID" -b > /dev/null
 echo "TIMING booted at $(( $(date +%s) - JOB_T0 ))s"
 xcrun simctl ui "$SIM_UDID" appearance light
+# a screenshot of a simulator that does not answer must not cost the budget: it gets 8 s
+shot () {
+  xcrun simctl io "$SIM_UDID" screenshot $A/stall/$1.png > /dev/null 2>&1 & local p=$!
+  for _ in $(seq 1 8); do kill -0 $p 2>/dev/null || return 0; sleep 1; done
+  kill $p 2>/dev/null
+}
 start_test () {
   rm -rf $RESULT
   NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
@@ -40,7 +46,7 @@ while kill -0 $pid 2>/dev/null; do
   fi
   if [ $now -gt $CUTOFF ]; then
     echo "OUTCOME cutoff at $CUTOFF s" | tee -a $A/outcome.txt
-    xcrun simctl io "$SIM_UDID" screenshot $A/stall/cutoff.png > /dev/null 2>&1; break
+    shot cutoff; break
   fi
   if [ $retried -eq 0 ] && [ $i -ge 120 ] && ! grep -q "Test Case" $A/test.log; then
     echo "OUTCOME test start stalled once" | tee -a $A/outcome.txt
@@ -59,7 +65,7 @@ while kill -0 $pid 2>/dev/null; do
   # no output for 45 s is a stall, except while XCTest collects the spindump of a timed-out test (up to ~200 s of quiet)
   if [ $same -eq $STALL_S ] && { [ $timeout_at -eq 0 ] || [ $(( now - timeout_at )) -gt $QUIET_S ]; }; then
     echo "OUTCOME no test output for $STALL_S s at t=$i" | tee -a $A/outcome.txt
-    xcrun simctl io "$SIM_UDID" screenshot $A/stall/t$i.png > /dev/null 2>&1
+    shot t$i
   fi
 done
 if kill -0 $pid 2>/dev/null; then
@@ -68,5 +74,10 @@ if kill -0 $pid 2>/dev/null; then
   kill -9 $pid 2>/dev/null
 fi
 if [ -f $RESULT/Info.plist ]; then echo "TIMING result bundle finalized"; else echo "OUTCOME result bundle not finalized" | tee -a $A/outcome.txt; fi
+# leave nothing running for the runner to clean up after the job (its "Complete job" took 2 min 10 s once, with a simulator
+# and a test runner still alive, and 12 to 40 s otherwise)
+pkill -x AuditStopsUITests-Runner 2>/dev/null
+xcrun simctl shutdown "$SIM_UDID" > /dev/null 2>&1 & p=$!
+for _ in $(seq 1 15); do kill -0 $p 2>/dev/null || break; sleep 1; done
 echo "TIMING test done at $(( $(date +%s) - JOB_T0 ))s"
 true
