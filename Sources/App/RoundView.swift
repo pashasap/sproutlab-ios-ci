@@ -63,8 +63,8 @@ struct RoundView: View {
         let layout = wide ? AnyLayout(HStackLayout(alignment: .top, spacing: 24))
                           : AnyLayout(VStackLayout(spacing: 16))
         layout {
-            promptCard
             stimulusCard
+            promptCard
         }
     }
 
