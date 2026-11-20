@@ -60,7 +60,7 @@ struct DotsView: View {
     private func dot(_ shape: StimulusShape, cued: Bool) -> some View {
         switch shape {
         case .filled:
-            Circle().fill(dotColour).frame(width: 28, height: 28).overlay { ring(cued) }
+            Circle().fill(Color.clear).frame(width: 28, height: 28).overlay { ring(cued) }
         case .emptyOutline:
             Circle().strokeBorder(dotColour, lineWidth: cued ? 6 : 3).frame(width: 28, height: 28)
                 .overlay { ring(cued) }
