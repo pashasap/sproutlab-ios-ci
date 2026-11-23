@@ -145,6 +145,7 @@ struct ReadingKitSession {
         if item.r3Activity == .repairSplit {
             return ReadingR3Repair.isComplete(tileSet: tiles, item: item) ? .correct : .pending
         }
+        guard tiles.pickedLetters.count == 2 else { return .pending }
         return ReadingR3Select.isCorrect(tileSet: tiles, item: item) ? .correct : .wrong
     }
 

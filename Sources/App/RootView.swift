@@ -46,6 +46,7 @@ struct RootView: View {
     @State private var contentHeight: CGFloat = 0
     @State private var auditGallery = false
     @State private var auditJournal = false
+    @State private var auditDiagnostics = false
 
     var body: some View {
         let app = environment.app
@@ -64,8 +65,8 @@ struct RootView: View {
         }
         .background(Palette.background.ignoresSafeArea())
         .modifier(AuditRoot(launch: environment.audit))
-        .sheet(isPresented: Binding(get: { app.diagnosticsVisible },
-                                    set: { app.setDiagnosticsVisible($0) })) {
+        .sheet(isPresented: Binding(get: { app.diagnosticsVisible || auditDiagnostics },
+                                    set: { app.setDiagnosticsVisible($0); if !$0 { auditDiagnostics = false } })) {
             DiagnosticsSheet(model: environment.diagnostics, language: app.language)
                 .auditRoot(root(for: .diagnostics))
         }
@@ -87,6 +88,7 @@ struct RootView: View {
         .onAppear {
             auditGallery = environment.auditState?.screen == .gallery
             auditJournal = environment.auditState?.screen == .journal
+            auditDiagnostics = environment.auditState?.screen == .diagnostics
         }
     }
 

@@ -114,7 +114,10 @@ public final class RoundViewModel {
         return round.helperVisible ? ContentHelpStep.highlight.applying(to: state, language: language) : state
     }
 
-    public var choiceLabels: [String] { displayedQuestion.choices.map { String($0) } }
+    public var choiceLabels: [String] {
+        let words = round.currentItem.changeLetterWords()
+        return words.isEmpty ? displayedQuestion.choices.map { String($0) } : words
+    }
     /// The question's stimulus: present from the start, never changed by hints or language.
     public var stimulus: QuestionStimulus { displayedQuestion.stimulus }
     /// Next-action hint after a wrong answer, in the current language; nil otherwise.

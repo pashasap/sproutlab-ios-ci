@@ -12,7 +12,8 @@ struct KitTileSetView: View {
     var body: some View {
         let actions = tiles.accessibilityActions
         VStack(spacing: 16) {
-            if !stimulusWord.isEmpty {
+            // Chunk tiles are the word itself, so no static gapped copy of it is drawn above them.
+            if !stimulusWord.isEmpty, tiles.kind != .syllable {
                 Text(stimulusWord)
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(Palette.ink)
@@ -26,11 +27,16 @@ struct KitTileSetView: View {
                     }
                     .overlay(RoundedRectangle(cornerRadius: 12)
                         .stroke(Palette.activity(tiles.highlightColourToken), lineWidth: 4)
-                        .opacity(target.subject == tiles.selectedToken ? 1 : 0))
+                        .opacity(isHighlighted(target) ? 1 : 0))
                 }
             }
         }
         .kitActions(actions, language: language) { send($0.command) }
         .kitAnnounce(tiles.announcements, language: language)
+    }
+
+    private func isHighlighted(_ target: KitTapTarget) -> Bool {
+        guard let subject = target.subject else { return false }
+        return tiles.pickedLetters.isEmpty ? subject == tiles.selectedToken : tiles.pickedLetters.contains(subject)
     }
 }

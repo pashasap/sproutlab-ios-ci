@@ -131,6 +131,11 @@ extension Item {
             let word = TextTable.string("reading.choice.label", language)
             choices = texts.map { ReadingChoicePresentation(text: $0, accessibilityLabel: word + " " + $0) }
         }
+        let changeWords = changeLetterWords()
+        if !changeWords.isEmpty {
+            let word = TextTable.string("reading.choice.label", language)
+            choices = changeWords.map { ReadingChoicePresentation(text: $0, accessibilityLabel: word + " " + $0) }
+        }
         switch ReadingKitSession.make(for: self)?.state {
         case .board(let board)?:
             slotCount = board.slots.count

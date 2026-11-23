@@ -94,6 +94,7 @@ public enum TextScale: Sendable {
 
 public struct TerrariumControlFrames: Equatable, Sendable {
     public let close: LayoutRect
+    public let journal: LayoutRect
     public let panLeft: LayoutRect
     public let panRight: LayoutRect
     public let dial: LayoutRect
@@ -143,6 +144,7 @@ extension LayoutPolicy {
         }
         return TerrariumControlFrames(
             close: frame(safe.minX + margin, safe.minY + controlMargin),
+            journal: frame(safe.maxX - margin - side, safe.minY + controlMargin),
             panLeft: frame(safe.minX + margin, midY),
             panRight: frame(safe.maxX - margin - side, midY),
             dial: frame(safe.minX + max(0, (safe.width - side) / 2),

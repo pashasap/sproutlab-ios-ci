@@ -38,7 +38,7 @@ final class AppEnvironment {
     func didLaunch() {
         app.launch()
         if let audit { openAuditStop(audit) }
-        frames.start()
+        if FramePolicy.startsFrameMonitoring(auditState: auditState) { frames.start() }
         launchSeconds = ProcessInfo.processInfo.systemUptime - started
     }
 
@@ -49,7 +49,6 @@ final class AppEnvironment {
         app.applyAudit(state)
         switch state.screen {
         case .terrarium: app.openTerrarium()
-        case .diagnostics: app.setDiagnosticsVisible(true)
         default: break
         }
     }

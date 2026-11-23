@@ -43,19 +43,11 @@ struct TerrariumView: View {
     }
 
     private func garden(_ frame: TerrariumFrame) -> some View {
-        let scene = model.scene
-        return ZStack(alignment: .topLeading) {
-            TerrariumSkyView(frame: frame, scheme: scheme)
-            ForEach(scene.layers, id: \.id) { layer in
-                layerView(layer, frame)
-                    .offset(x: -model.panOffset * layer.parallax)
-            }
-            controls
-            TerrariumDialView(frame: frame, scheme: scheme, language: model.language) { phase = $0 }
-                .position(x: scene.screenWidth / 2, y: model.backPosition.y)
+        GeometryReader { proxy in
+            gardenStack(frame, proxy)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
         }
-        .frame(width: scene.screenWidth, height: scene.height)
-        .clipped()
         .gesture(DragGesture(minimumDistance: 40).onEnded { drag in
             if drag.translation.width < 0 { model.panRight() } else { model.panLeft() }
         })
@@ -63,13 +55,13 @@ struct TerrariumView: View {
     }
 
     @ViewBuilder
-    private func layerView(_ layer: GardenLayer, _ frame: TerrariumFrame) -> some View {
+    private func layerView(_ layer: GardenLayer, _ frame: TerrariumFrame, width: CGFloat) -> some View {
         if layer.id == "stage" {
             ZStack(alignment: .topLeading) {
                 ForEach(model.habitats, id: \.id) { habitat in
                     ForEach(habitat.residentIds, id: \.self) { id in
                         if let resident = model.resident(id) {
-                            ResidentView(model: model, resident: resident,
+                            ResidentView(model: model, resident: resident, viewportWidth: width,
                                          pose: frame.poses[id] ?? PoseScheduler.stillPose(id))
                         }
                     }
@@ -86,22 +78,33 @@ struct TerrariumView: View {
         CGPoint(x: rect.x + rect.width / 2, y: rect.y + rect.height / 2)
     }
 
-    /// Controls are placed inside the viewport (the view's own width), never from the 1000 pt canvas.
-    private var controls: some View {
-        GeometryReader { proxy in
-            let screen = ScreenMetrics(width: Double(proxy.size.width), height: Double(proxy.size.height),
-                                       insets: SafeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-            let frames = LayoutPolicy.terrariumControls(screen, sceneWidth: model.scene.width)
-            ZStack(alignment: .topLeading) {
-                controlButton(model.closeControl, action: onBack)
-                    .position(centre(frames.close))
-                controlButton(model.journalControl) { showJournal = true }
-                    .position(x: proxy.size.width - 16 - model.journalControl.width / 2, y: centre(frames.close).y)
-                controlButton(model.panLeftControl) { model.panLeft() }
-                    .position(centre(frames.panLeft))
-                controlButton(model.panRightControl) { model.panRight() }
-                    .position(centre(frames.panRight))
+    private func gardenStack(_ frame: TerrariumFrame, _ proxy: GeometryProxy) -> some View {
+        ZStack(alignment: .topLeading) {
+            TerrariumSkyView(frame: frame, scheme: scheme)
+            ForEach(model.scene.layers, id: \.id) { layer in
+                layerView(layer, frame, width: proxy.size.width)
+                    .offset(x: -model.panOffset * layer.parallax)
             }
+            controls(frame, proxy)
+        }
+    }
+
+    /// Controls are placed inside the viewport (the view's own width), never from the 1000 pt canvas.
+    private func controls(_ frame: TerrariumFrame, _ proxy: GeometryProxy) -> some View {
+        let screen = ScreenMetrics(width: Double(proxy.size.width), height: Double(proxy.size.height),
+                                   insets: SafeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        let frames = LayoutPolicy.terrariumControls(screen, sceneWidth: model.scene.width)
+        return ZStack(alignment: .topLeading) {
+            controlButton(model.closeControl, action: onBack)
+                .position(centre(frames.close))
+            controlButton(model.journalControl) { showJournal = true }
+                .position(centre(frames.journal))
+            controlButton(model.panLeftControl) { model.panLeft() }
+                .position(centre(frames.panLeft))
+            controlButton(model.panRightControl) { model.panRight() }
+                .position(centre(frames.panRight))
+            TerrariumDialView(frame: frame, scheme: scheme, language: model.language) { phase = $0 }
+                .position(centre(frames.dial))
         }
     }
 
@@ -119,6 +122,7 @@ struct TerrariumView: View {
 private struct ResidentView: View {
     let model: TerrariumViewModel
     let resident: TerrariumResident
+    let viewportWidth: CGFloat
     let pose: Pose
     @State private var tilt = false
 
@@ -133,6 +137,7 @@ private struct ResidentView: View {
                     .scaleEffect(pose.scale)
                     .offset(x: pose.offset.x, y: pose.offset.y)
             }
+            .accessibilityLabel(resident.accessibilityLabel)
             if let welcome = resident.welcome {
                 Button { acknowledge(model.welcome(resident.id)) } label: {
                     Image(systemName: TextTable.string(welcome.iconKey, .en))
@@ -142,9 +147,8 @@ private struct ResidentView: View {
             }
         }
         .frame(width: area.width, height: area.height)
-        .position(x: resident.position.x, y: resident.position.y)
+        .position(x: min(max(40, resident.position.x), max(40, viewportWidth - 40)), y: resident.position.y)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(resident.accessibilityLabel)
         .accessibilityIdentifier(resident.accessibilityId)
         .onAppear { if resident.wobble == .animated { withAnimation(.easeInOut(duration: wobbleSeconds).repeatForever()) { tilt = true } } }
     }

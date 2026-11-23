@@ -1,11 +1,11 @@
-/// Select the digraph: one tile holds the grapheme, the others are single letters of the word.
+/// Select the digraph: every letter of the word is a tile; the child taps the two adjacent letters of the digraph.
 public enum ReadingR3Select {
     public static func tileSet(for item: ReadingBankItem) -> KitTileSet {
-        KitTileSet(kind: .letter, tiles: item.palette, colourToken: .purple)
+        KitTileSet(letters: item.words.first ?? "", pair: item.grapheme ?? "", colourToken: .purple)
     }
 
     public static func isCorrect(tileSet: KitTileSet, item: ReadingBankItem) -> Bool {
-        item.grapheme != nil && tileSet.selectedToken == item.grapheme
+        item.grapheme != nil && tileSet.pairPicked
     }
 }
 
@@ -20,13 +20,27 @@ public enum ReadingR3Blend {
     }
 }
 
-/// Repair a split grapheme: two letter tiles that the child joins back into one unit.
+/// Repair a split grapheme: the word is cut into chunks (the grapheme split across two of them)
+/// that the child moves back into order.
 public enum ReadingR3Repair {
+    /// The word cut around its grapheme, e.g. rouler into ro, u, ler.
+    public static func chunks(for item: ReadingBankItem) -> [String] {
+        let word = item.words.first ?? ""
+        guard let grapheme = item.grapheme, grapheme.count == 2, let range = word.range(of: grapheme) else {
+            return [word]
+        }
+        let prefix = String(word[..<range.lowerBound]), suffix = String(word[range.upperBound...])
+        let first = String(grapheme.first ?? " "), second = String(grapheme.last ?? " ")
+        return [prefix + first, second, suffix].filter { !$0.isEmpty }
+    }
+
     public static func tileSet(for item: ReadingBankItem) -> KitTileSet {
-        KitTileSet(splitGrapheme: item.tokens, colourToken: .purple)
+        let pieces = chunks(for: item)
+        let shifted = pieces.count > 1 ? Array(pieces.dropFirst()) + pieces.prefix(1) : pieces
+        return KitTileSet(chunks: shifted, colourToken: .purple)
     }
 
     public static func isComplete(tileSet: KitTileSet, item: ReadingBankItem) -> Bool {
-        item.grapheme != nil && tileSet.tiles == [item.grapheme ?? ""]
+        tileSet.tiles.joined() == item.words.first
     }
 }

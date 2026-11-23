@@ -64,7 +64,7 @@ struct RoundView: View {
                           : AnyLayout(VStackLayout(spacing: 16))
         layout {
             promptCard
-            stimulusCard
+            if round.showsStimulusCard { stimulusCard }
         }
     }
 

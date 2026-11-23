@@ -21,6 +21,11 @@ public enum FramePolicy {
         !visible
     }
 
+    /// The frame monitor never runs during an audit launch, so the audit can reach quiescence.
+    public static func startsFrameMonitoring(auditState: AuditLaunchState?) -> Bool {
+        auditState == nil
+    }
+
     /// Per-frame effects: no blur, no shadow modifier, no image filter.
     public static let allowedEffects: [RenderEffect] = [
         .gradientFill, .opacity, .offset, .rotation, .scale, .path, .glowGradient
