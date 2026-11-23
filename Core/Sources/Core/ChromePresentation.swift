@@ -111,6 +111,12 @@ extension ChromeCatalog {
         case .soundWave: return "waveform"
         case .syllableBlocks: return "puzzlepiece.fill"
         case .wordCard: return "text.book.closed.fill"
+        case .orderedTiles: return "signpost.right.fill"
+        case .blendedSounds: return "map.fill"
+        case .swappedLetter: return "textformat"
+        case .letterPair: return "character.book.closed.fill"
+        case .joinedWord: return "book.fill"
+        case .mendedWord: return "hand.tap.fill"
         }
     }
 

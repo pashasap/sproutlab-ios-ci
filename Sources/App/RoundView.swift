@@ -63,8 +63,8 @@ struct RoundView: View {
         let layout = wide ? AnyLayout(HStackLayout(alignment: .top, spacing: 24))
                           : AnyLayout(VStackLayout(spacing: 16))
         layout {
-            stimulusCard
             promptCard
+            stimulusCard
         }
     }
 
@@ -85,7 +85,7 @@ struct RoundView: View {
         .background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
     }
 
-    /// A kit item speaks its own syllable or word; every other item speaks the prompt.
+    /// Tap to Hear: the only path that speaks; it says the full sentence line, never auto-spoken.
     private func speak() {
         if round.kitPresentation != nil { app.hear() } else { app.listen() }
     }
@@ -97,11 +97,13 @@ struct RoundView: View {
                     .font(.headline)
                     .foregroundStyle(Palette.ink)
             }
-            let presentation = round.stimulus.presentation
-            DotsView(presentation: presentation, cue: round.wrongCue?.target)
-                .accessibilityLabel(TextTable.string("a11y.dots", app.language))
-                .accessibilityValue(round.stimulus.presentation.accessibilityValue(app.language))
-                .accessibilityIdentifier(SproutIdentifier.stimulus)
+            if round.readingPresentation == nil {
+                let presentation = round.stimulus.presentation
+                DotsView(presentation: presentation, cue: round.wrongCue?.target)
+                    .accessibilityLabel(TextTable.string("a11y.dots", app.language))
+                    .accessibilityValue(round.stimulus.presentation.accessibilityValue(app.language))
+                    .accessibilityIdentifier(SproutIdentifier.stimulus)
+            }
             HelpLadderView(steps: Array(round.helpLadder.prefix(round.revealedHelpSteps)))
         }
         .padding(20)
@@ -114,13 +116,17 @@ struct RoundView: View {
         let dimmed = round.wrongCue?.dimmedChoices ?? []
         return HStack(spacing: 16) {
             ForEach(Array(round.choiceLabels.enumerated()), id: \.offset) { index, label in
+                let reading = round.readingPresentation?.choices
+                let shown = reading?.indices.contains(index) == true ? reading![index].text : label
                 Button { round.select(choiceIndex: index, questionNumber: number) } label: {
-                    Text(label)
+                    Text(shown)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .opacity(dimmed.contains(index) ? 0.35 : 1)
-                .accessibilityLabel(TextTable.string("a11y.choice", app.language))
-                .accessibilityValue(label)
+                .accessibilityLabel(reading?.indices.contains(index) == true
+                                    ? reading![index].accessibilityLabel
+                                    : TextTable.string("a11y.choice", app.language))
+                .accessibilityValue(shown)
                 .accessibilityIdentifier(SproutIdentifier.choice(index))
             }
         }

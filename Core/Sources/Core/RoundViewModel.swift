@@ -81,6 +81,9 @@ public final class RoundViewModel {
     /// What the ear button speaks: the prompt, plus the stimulus in words for the new activities.
     public var speechText: String { round.currentItem.speechLine(language) }
 
+    /// Reading presentation of the current question; nil for math and notices.
+    public var readingPresentation: ReadingItemPresentation? { round.currentItem.readingPresentation(language) }
+
     /// Identity of the current question; independent of language.
     public var identity: ActivityIdentity { round.currentItem.identity }
 

@@ -17,6 +17,10 @@ permissions:
 jobs:
   checkpoint:
     runs-on: xcode-27
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     # Operator decision 2026-11-16, D-20261116-p-1: the run takes at most 15 minutes when no stop timed out, at most 20 when one did.
     # run_ui.sh keeps to that with its two cutoffs; this is only the backstop above the 20-minute case.
     timeout-minutes: 22
@@ -72,7 +76,7 @@ jobs:
         run: |
           set +e
           # cutoff 760 s while no test timed out (the job then ends inside 15 minutes), 980 s once one did (inside 20)
-          bash ci/run_ui.sh 760 980
+          SHARD_INDEX=${{ matrix.shard }} SHARD_TOTAL=3 bash ci/run_ui.sh 760 980
           true
 
       - name: Collect
@@ -94,7 +98,7 @@ jobs:
         timeout-minutes: 2
         uses: actions/upload-artifact@v4
         with:
-          name: native-checkpoint
+          name: native-checkpoint-shard-${{ matrix.shard }}
           retention-days: 5
           if-no-files-found: ignore
           path: |

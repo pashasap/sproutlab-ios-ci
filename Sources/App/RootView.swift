@@ -19,25 +19,33 @@ private struct ContentHeightKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
-/// Under an audit launch: the root identifier from the Core value and no animations. Otherwise unchanged.
+/// Under an audit launch: no animations. Otherwise unchanged. The root identifier is not set here.
 private struct AuditRoot: ViewModifier {
     let launch: AuditLaunch?
 
     @ViewBuilder
     func body(content: Content) -> some View {
         if let launch {
-            content
-                .accessibilityIdentifier(launch.root)
-                .transaction { $0.disablesAnimations = !launch.animationsEnabled }
+            content.transaction { $0.disablesAnimations = !launch.animationsEnabled }
         } else {
             content
         }
     }
 }
 
+extension View {
+    /// Attaches the audit stop's root identifier to this rendered view; nothing when `id` is nil.
+    @ViewBuilder
+    func auditRoot(_ id: String?) -> some View {
+        if let id { accessibilityIdentifier(id) } else { self }
+    }
+}
+
 struct RootView: View {
     let environment: AppEnvironment
     @State private var contentHeight: CGFloat = 0
+    @State private var auditGallery = false
+    @State private var auditJournal = false
 
     var body: some View {
         let app = environment.app
@@ -59,13 +67,33 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { app.diagnosticsVisible },
                                     set: { app.setDiagnosticsVisible($0) })) {
             DiagnosticsSheet(model: environment.diagnostics, language: app.language)
+                .auditRoot(root(for: .diagnostics))
         }
         .sheet(isPresented: Binding(get: { app.terrariumVisible },
                                     set: { app.setTerrariumVisible($0) })) {
             TerrariumSheet(content: environment.terrariumContent(),
                            accessibilityLabel: app.starButton.ringText,
                            onClose: { app.setTerrariumVisible(false) })
+                .auditRoot(root(for: .terrarium))
         }
+        .sheet(isPresented: $auditGallery) {
+            GalleryView(language: app.language).auditRoot(root(for: .gallery))
+        }
+        .sheet(isPresented: $auditJournal) {
+            if case let .terrarium(model) = environment.terrariumContent() {
+                JournalView(model: model) { auditJournal = false }.auditRoot(root(for: .journal))
+            }
+        }
+        .onAppear {
+            auditGallery = environment.auditState?.screen == .gallery
+            auditJournal = environment.auditState?.screen == .journal
+        }
+    }
+
+    /// The audit root identifier when the audit stop opens `screen`; nil otherwise.
+    private func root(for screen: AuditScreen) -> String? {
+        guard let state = environment.auditState, state.screen == screen else { return nil }
+        return state.rootId
     }
 
     private func measured(_ app: AppViewModel) -> some View {
@@ -77,10 +105,10 @@ struct RootView: View {
     @ViewBuilder
     private func content(_ app: AppViewModel) -> some View {
         switch app.screen {
-        case .welcome: WelcomeView(app: app)
-        case .trail: TrailView(app: app)
-        case .round: RoundScreen(app: app)
-        case .summary: SummaryView(app: app)
+        case .welcome: WelcomeView(app: app).auditRoot(root(for: .welcome))
+        case .trail: TrailView(app: app).auditRoot(root(for: .trail))
+        case .round: RoundScreen(app: app).auditRoot(root(for: .round))
+        case .summary: SummaryView(app: app).auditRoot(root(for: .summary))
         }
     }
 }

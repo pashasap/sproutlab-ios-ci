@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 
 public enum Screen: Equatable, Sendable {
@@ -114,6 +115,10 @@ public final class AppViewModel {
     public func startLevel(_ levelId: String) {
         startMusicIfNeeded()
         guard screen == .trail, let model = trail.startRound(levelId: levelId) else { return }
+        open(model)
+    }
+
+    private func open(_ model: RoundViewModel) {
         model.onComplete = { [weak self] in self?.showSummary() }
         model.onAbandon = { [weak self, weak model] in
             guard let self, let model, self.round === model else { return }
@@ -121,6 +126,29 @@ public final class AppViewModel {
         }
         round = model
         screen = .round
+    }
+
+    /// Opens the audit state: the seeded record replaces any saved one, a question stop opens its
+    /// exact level, seed and question, and the summary stop shows the three stars just earned.
+    public func applyAudit(_ state: AuditLaunchState) {
+        record = state.record
+        language = record.language
+        totalStars = record.totalStars
+        completedLevels = record.completedLevels
+        trail.update(record: record, language: language)
+        switch state.screen {
+        case .welcome: break
+        case .round:
+            screen = .trail
+            let round = Round(levelId: state.levelId, seed: state.seed).starting(at: state.questionIndex)
+            open(RoundViewModel(round: round, language: language, haptics: services.haptics))
+        case .summary:
+            record.recordRound(RoundEntry(levelId: state.levelId, date: Date(timeIntervalSince1970: 0),
+                                          firstTryCount: ProgressRecord.starsPerRound, helpUsed: false))
+            totalStars = record.totalStars
+            screen = .summary
+        default: screen = .trail
+        }
     }
 
     public func setLanguage(_ newLanguage: Language) {

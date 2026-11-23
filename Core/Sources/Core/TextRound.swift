@@ -1,9 +1,9 @@
 extension TextTable {
     static let roundTexts: [String: TextEntry] = [
-        "round.prompt.count": TextEntry("Combien de points vois-tu ?", "How many dots do you see?"),
-        "round.prompt.bond": TextEntry("Combien manque-t-il pour faire 10 ?", "How many more to make 10?"),
+        "round.prompt.count": TextEntry("Combien de points ?", "How many dots?"),
+        "round.prompt.bond": TextEntry("Faire 10", "Make 10"),
         "round.prompt.count.keyword": TextEntry("points", "dots"),
-        "round.prompt.bond.keyword": TextEntry("manque", "more"),
+        "round.prompt.bond.keyword": TextEntry("10", "10"),
         "round.progress": TextEntry("Question", "Question"),
         "round.encourage": TextEntry("Regarde bien les groupes de points.",
                                      "Look closely at the groups of dots."),

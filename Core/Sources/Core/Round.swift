@@ -35,6 +35,13 @@ public struct Round: Sendable, Equatable {
 
     public var currentItem: Item { items[currentIndex] }
 
+    /// The same round opened at question `index` (clamped to the questions it holds).
+    public func starting(at index: Int) -> Round {
+        var copy = self
+        copy.currentIndex = min(max(0, index), max(0, items.count - 1))
+        return copy
+    }
+
     public var starsAwarded: Int { isComplete ? Round.starsOnCompletion : 0 }
 
     /// The same round with every unanswered question (the current one and later) mapped by `transform`;

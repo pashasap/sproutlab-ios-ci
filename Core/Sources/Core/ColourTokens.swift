@@ -56,6 +56,10 @@ public enum ColourTokens {
     }
 
     public static let gardenGround = "colour.garden.ground"
+    /// Standard secondary text colour; light and dark values are resolved in `value`.
+    public static let secondaryText = "colour.text.secondary"
+    /// The round progress label ("Question 1 sur 5") uses the secondary text token.
+    public static let progressLabel = secondaryText
     public static let silhouette = "colour.silhouette"
     public static let shadow = "colour.shadow"
     public static let backSuffix = ".back"
@@ -113,6 +117,10 @@ public enum ColourTokens {
             guard base != gardenGround, let colour = value(base, scheme),
                   let ground = value(gardenGround, scheme) else { return nil }
             return colour.mixed(toward: ground, backMix)
+        }
+        if token == secondaryText {
+            return scheme == .light ? RGBColour(r: 0.30, g: 0.30, b: 0.30)
+                                    : RGBColour(r: 0.75, g: 0.78, b: 0.75)
         }
         guard let swatch = palette[token] else { return nil }
         return scheme == .light ? swatch.light : swatch.dark

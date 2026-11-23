@@ -1,11 +1,10 @@
 extension TextTable {
     /// Texts of the add-and-subtract level: title, prompts, keywords, help, hints and text equivalents.
     static let addSubTexts: [String: TextEntry] = [
-        "trail.level.math-add-sub-20.title": TextEntry("Additions et soustractions jusqu'à 20",
-                                                       "Add and take away up to 20"),
-        "round.prompt.add": TextEntry("Combien de points en tout ?", "How many dots in all?"),
+        "trail.level.math-add-sub-20.title": TextEntry("Plus et moins", "Plus and minus"),
+        "round.prompt.add": TextEntry("Combien en tout ?", "Dots in all?"),
         "round.prompt.add.keyword": TextEntry("en tout", "in all"),
-        "round.prompt.subtract": TextEntry("Combien de points restent-ils ?", "How many dots are left?"),
+        "round.prompt.subtract": TextEntry("Combien restent ?", "Dots left?"),
         "round.prompt.subtract.keyword": TextEntry("restent", "left"),
         "round.help.join": TextEntry("Regarde les deux groupes de points.", "Look at the two groups of dots."),
         "round.help.crossed": TextEntry("Les points barrés ne comptent pas.", "Crossed-out dots do not count."),

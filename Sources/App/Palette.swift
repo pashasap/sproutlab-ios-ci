@@ -15,14 +15,12 @@ enum Palette {
 
     /// Activity identity colours from the Core token, each with a light and a dark value.
     static func activity(_ token: ActivityColourToken) -> Color {
-        switch token {
-        case .blue: return dynamic(light: 0x1F5FBF, dark: 0x8AB8FF)
-        case .purple: return dynamic(light: 0x7B3FBF, dark: 0xC9A2FF)
-        case .teal: return dynamic(light: 0x0F766E, dark: 0x6FD6CB)
-        case .amber: return dynamic(light: 0x9A5B00, dark: 0xFFC247)
-        case .indigo: return dynamic(light: 0x4338CA, dark: 0xA5A0FF)
-        case .pink: return dynamic(light: 0xB0306F, dark: 0xFF9CC6)
-        }
+        let light = ActivityPalette.colour(token, .light)
+        let dark = ActivityPalette.colour(token, .dark)
+        return Color(uiColor: UIColor { traits in
+            let c = traits.userInterfaceStyle == .dark ? dark : light
+            return UIColor(red: c.r, green: c.g, blue: c.b, alpha: 1)
+        })
     }
 
     /// Core colour token to colour; unknown tokens fall back to the ink colour.

@@ -4,6 +4,8 @@ import Core
 struct WelcomeView: View {
     let app: AppViewModel
 
+    private var presentation: WelcomePresentation { WelcomePresentation(language: app.language) }
+
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
@@ -11,15 +13,22 @@ struct WelcomeView: View {
                 .font(.system(size: 96))
                 .foregroundStyle(Palette.accent)
                 .accessibilityHidden(true)
-            Text(TextTable.string("welcome.tagline", app.language))
+            Text(presentation.titleText)
+                .font(.largeTitle.bold())
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Palette.ink)
+            Text(presentation.tagline)
                 .font(.title2)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.ink)
-            Button { app.play() } label: {
-                Label(TextTable.string("welcome.play", app.language), systemImage: ChromeCatalog.symbolName(for: .play))
+            ForEach(presentation.playControls, id: \.visibleLabel) { control in
+                Button { app.play() } label: {
+                    Label(control.visibleLabel, systemImage: ChromeCatalog.symbolName(for: .play))
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .frame(minWidth: control.minimumWidth, minHeight: control.minimumHeight)
+                .accessibilityLabel(control.spokenLabel)
             }
-            .buttonStyle(PrimaryButtonStyle())
-            .accessibilityLabel(TextTable.string("a11y.play", app.language))
             noticeView
             Spacer()
         }

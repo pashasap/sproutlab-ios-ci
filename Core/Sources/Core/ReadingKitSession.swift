@@ -223,9 +223,8 @@ extension RoundViewModel {
         }
     }
 
-    /// Tap to Hear for the current item: speaks a syllable or a word, nothing else.
+    /// Tap to Hear for the current item: speaks the full sentence line, only on this explicit command.
     public func hear(speech: any SpeechService) {
-        guard let id = items[questionNumber - 1].readingId, let bank = ReadingBank.item(id: id) else { return }
-        ReadingHearControl(item: bank.speechItem, speech: speech).tapToHear()
+        _ = try? speech.speak(voiceTag: language == .fr ? "fr-FR" : "en-US", text: speechText)
     }
 }

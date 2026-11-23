@@ -31,6 +31,7 @@ final class AppEnvironment {
         self.music = music
         self.speech = speech
         self.store = store
+        if let audit { _ = store.save(AuditLaunchState(launch: audit).record) }
         app = AppViewModel(store: store, services: services)
     }
 
@@ -43,18 +44,18 @@ final class AppEnvironment {
 
     /// Opens the screen the audit state names; music stays off and nothing touches the network.
     private func openAuditStop(_ audit: AuditLaunch) {
+        let state = AuditLaunchState(launch: audit)
         app.setMusic(audit.musicOn)
-        switch audit.state.screen {
-        case .welcome: break
-        case .trail: app.play()
-        case .round, .summary:
-            app.play()
-            if !audit.state.levelId.isEmpty { app.startLevel(audit.state.levelId) }
+        app.applyAudit(state)
+        switch state.screen {
         case .terrarium: app.openTerrarium()
         case .diagnostics: app.setDiagnosticsVisible(true)
-        case .gallery, .journal: app.play()
+        default: break
         }
     }
+
+    /// The audit state, nil on a normal launch.
+    var auditState: AuditLaunchState? { audit.map { AuditLaunchState(launch: $0) } }
 
     /// The terrarium sheet content for the current save, wired to the real audio.
     func terrariumContent() -> TerrariumSheetContent {

@@ -139,9 +139,10 @@ public struct Item: Sendable, Equatable {
         return out
     }
 
+    /// Text key of the short child-path prompt (1 to 3 words).
     public var promptKey: String {
         if let noticeTextKey { return noticeTextKey }
-        if readingId != nil { return "reading.prompt.sound" }
+        if readingId != nil, let key = identity.promptKey { return key }
         switch kind {
         case .counting: return "round.prompt.count"
         case .bond: return "round.prompt.bond"

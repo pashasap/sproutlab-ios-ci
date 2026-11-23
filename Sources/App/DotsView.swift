@@ -9,7 +9,7 @@ struct DotsView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let layout = LayoutPolicy.stimulusLayout(presentation, availableWidth: twoAcross(Double(proxy.size.width)))
+            let layout = LayoutPolicy.stimulusLayout(presentation, availableWidth: Double(proxy.size.width))
             laidOut(layout)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
@@ -18,7 +18,7 @@ struct DotsView: View {
     }
 
     private func heightFor(width: CGFloat) -> CGFloat {
-        let layout = LayoutPolicy.stimulusLayout(presentation, availableWidth: twoAcross(Double(width) - 48))
+        let layout = LayoutPolicy.stimulusLayout(presentation, availableWidth: Double(width) - 48)
         return CGFloat(layout.totalHeight) + (presentation.isTenFrame ? 20 : 0)
     }
 
@@ -39,19 +39,11 @@ struct DotsView: View {
         }
     }
 
-    /// Step 4b alternative layout: plain dots wrap two to a row.
-    private func twoAcross(_ width: Double) -> Double {
-        guard presentation.trackValues.isEmpty, !presentation.isTenFrame, presentation.groups.count != 2 else {
-            return width
-        }
-        return min(width, 2 * LayoutPolicy.minimumDotSize + LayoutPolicy.stimulusSpacing)
-    }
-
     private func value(at index: Int) -> Int? {
         presentation.trackValues.indices.contains(index) ? presentation.trackValues[index] : nil
     }
 
-    private var dotColour: Color { Palette.ink }
+    private var dotColour: Color { Palette.token(presentation.dotColourToken) }
     private var markColour: Color { Palette.token(presentation.markColourToken) }
 
     @ViewBuilder

@@ -28,13 +28,32 @@ shot () {
   for _ in $(seq 1 8); do kill -0 $p 2>/dev/null || return 0; sleep 1; done
   kill $p 2>/dev/null
 }
+ONLY_TESTING_ARGS=""
+if [ -n "${SHARD_INDEX:-}" ] && [ -n "${SHARD_TOTAL:-}" ] && [ "${SHARD_TOTAL:-1}" -gt 1 ]; then
+  ONLY_TESTING_ARGS=$(python3 -c '
+import os, re
+from pathlib import Path
+idx, total = int(os.environ["SHARD_INDEX"]), int(os.environ["SHARD_TOTAL"])
+names = re.findall(r"func (test_\d+_[a-z0-9_]+)\(\)", Path("ci/UITests/Stops.swift").read_text())
+chosen = [n for i, n in enumerate(names) if (i % total) + 1 == idx]
+print(" ".join(f"-only-testing:AuditStopsUITests/AuditStopsUITests/{n}" for n in chosen))
+')
+fi
 start_test () {
   rm -rf $RESULT
-  NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
-    -destination "platform=iOS Simulator,id=$SIM_UDID" \
-    -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 \
-    -parallel-testing-enabled NO -resultBundlePath $RESULT \
-    -only-testing:AuditStopsUITests/AuditStopsUITests > $A/test.log 2>&1 &
+  if [ -n "$ONLY_TESTING_ARGS" ]; then
+    NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
+      -destination "platform=iOS Simulator,id=$SIM_UDID" \
+      -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 \
+      -parallel-testing-enabled NO -resultBundlePath $RESULT \
+      $ONLY_TESTING_ARGS > $A/test.log 2>&1 &
+  else
+    NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
+      -destination "platform=iOS Simulator,id=$SIM_UDID" \
+      -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 \
+      -parallel-testing-enabled NO -resultBundlePath $RESULT \
+      -only-testing:AuditStopsUITests/AuditStopsUITests > $A/test.log 2>&1 &
+  fi
   pid=$!
 }
 start_test; retried=0; i=0; done_at=0; last=""; same=0; timeout_at=0
