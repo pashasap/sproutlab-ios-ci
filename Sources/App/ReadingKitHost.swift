@@ -18,15 +18,18 @@ struct ReadingKitHost: View {
         switch presentation.component {
         case .slotBoard:
             if let board = round.kitSlotBoard {
-                KitSlotBoardView(board: board, language: language, send: { round.send($0) })
+                KitSlotBoardView(board: board, language: language, send: { round.send($0) },
+                                 slotLabels: round.readingPresentation?.slotLabels ?? [])
             }
         case .tileSet:
             if let tiles = round.kitTileSet {
-                KitTileSetView(tiles: tiles, language: language, send: { round.send($0) })
+                KitTileSetView(tiles: tiles, language: language, send: { round.send($0) },
+                               stimulusWord: round.readingPresentation?.stimulusWord ?? "")
             }
         case .ordering:
             if let ordering = round.kitOrdering {
-                KitOrderingView(ordering: ordering, language: language, send: { round.send($0) })
+                KitOrderingView(ordering: ordering, language: language, send: { round.send($0) },
+                                tiles: round.readingPresentation?.orderingTiles ?? [])
             }
         case .sorting:
             if let sorting = round.kitSorting {

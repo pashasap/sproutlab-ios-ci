@@ -6,8 +6,45 @@ import Core
 struct DotsView: View {
     let presentation: StimulusPresentation
     var cue: CueTarget?
+    var isComparison = false
 
     var body: some View {
+        if isComparison, presentation.groups.count == 2 {
+            comparisonCards
+        } else {
+            plainBody
+        }
+    }
+
+    /// Two cards side by side, their dots placed by Core `comparisonLayout`.
+    private var comparisonCards: some View {
+        let width = Double(UIScreen.main.bounds.width) - 48
+        let screen = ScreenMetrics(width: width, height: 300,
+                                   insets: SafeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        let layout = LayoutPolicy.comparisonLayout(screen, leftCount: presentation.groups[0].count,
+                                                   rightCount: presentation.groups[1].count)
+        return ZStack(alignment: .topLeading) {
+            card(layout.leftCard, layout.leftDots)
+            card(layout.rightCard, layout.rightDots)
+        }
+        .offset(y: -layout.leftCard.y)
+        .frame(width: width, height: layout.leftCard.height, alignment: .topLeading)
+        .accessibilityElement(children: .ignore)
+    }
+
+    private func card(_ rect: LayoutRect, _ dots: [LayoutRect]) -> some View {
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.locked, lineWidth: 2)
+                .frame(width: rect.width, height: rect.height)
+                .offset(x: rect.x, y: rect.y)
+            ForEach(dots.indices, id: \.self) { index in
+                Circle().fill(dotColour).frame(width: dots[index].width, height: dots[index].height)
+                    .offset(x: dots[index].x, y: dots[index].y)
+            }
+        }
+    }
+
+    private var plainBody: some View {
         GeometryReader { proxy in
             let layout = LayoutPolicy.stimulusLayout(presentation, availableWidth: Double(proxy.size.width))
             laidOut(layout)

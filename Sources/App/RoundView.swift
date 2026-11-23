@@ -52,10 +52,10 @@ struct RoundView: View {
     }
 
     private var progress: some View {
-        Text(AccessibilityText.questionAnnouncement(
+        Text(AccessibilityText.progressLabel(
             number: round.questionNumber, of: round.questionCount, language: app.language))
             .font(.headline)
-            .foregroundStyle(Palette.locked)
+            .foregroundStyle(Palette.ink)
     }
 
     @ViewBuilder
@@ -97,9 +97,16 @@ struct RoundView: View {
                     .font(.headline)
                     .foregroundStyle(Palette.ink)
             }
+            if let word = round.readingPresentation?.stimulusWord, !word.isEmpty, round.kitPresentation == nil {
+                Text(word)
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundStyle(Palette.ink)
+                    .accessibilityIdentifier(SproutIdentifier.stimulus)
+            }
             if round.readingPresentation == nil {
                 let presentation = round.stimulus.presentation
-                DotsView(presentation: presentation, cue: round.wrongCue?.target)
+                DotsView(presentation: presentation, cue: round.wrongCue?.target,
+                         isComparison: round.identity == .comparison)
                     .accessibilityLabel(TextTable.string("a11y.dots", app.language))
                     .accessibilityValue(round.stimulus.presentation.accessibilityValue(app.language))
                     .accessibilityIdentifier(SproutIdentifier.stimulus)

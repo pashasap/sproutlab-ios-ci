@@ -126,23 +126,32 @@ extension LayoutPolicy {
     public static let maximumSlotBoardTiles = 12
     static let cellSpacing: Double = 8
 
+    public static let viewportMargin: Double = 16
+
+    /// Positions come from the viewport only; the scene width is accepted but ignored.
+    public static func terrariumControls(_ screen: ScreenMetrics, sceneWidth: Double) -> TerrariumControlFrames {
+        terrariumControls(screen)
+    }
+
     public static func terrariumControls(_ screen: ScreenMetrics) -> TerrariumControlFrames {
         let safe = screen.safeRect
         let side = controlSide
+        let margin = viewportMargin
         let midY = safe.minY + max(0, (safe.height - side) / 2)
         func frame(_ x: Double, _ y: Double) -> LayoutRect {
             LayoutRect(x: x, y: y, width: side, height: side)
         }
         return TerrariumControlFrames(
-            close: frame(safe.minX + controlMargin, safe.minY + controlMargin),
-            panLeft: frame(safe.minX + controlMargin, midY),
-            panRight: frame(safe.maxX - controlMargin - side, midY),
+            close: frame(safe.minX + margin, safe.minY + controlMargin),
+            panLeft: frame(safe.minX + margin, midY),
+            panRight: frame(safe.maxX - margin - side, midY),
             dial: frame(safe.minX + max(0, (safe.width - side) / 2),
                         safe.maxY - controlMargin - side))
     }
 
     private static func wrap(count: Int, cell: Double, availableWidth: Double) -> (rows: [[Int]], widths: [Double]) {
-        let perRow = max(1, Int(((availableWidth + cellSpacing) / (cell + cellSpacing)).rounded(.down)))
+        let fit = max(1, Int(((availableWidth + cellSpacing) / (cell + cellSpacing)).rounded(.down)))
+        let perRow = min(fit, maximumSlotBoardTiles)
         var rows: [[Int]] = []
         var start = 0
         while start < count {

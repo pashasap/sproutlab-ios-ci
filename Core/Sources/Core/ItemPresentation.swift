@@ -94,6 +94,24 @@ public struct ReadingItemPresentation: Sendable, Equatable {
     public let orderingTiles: [ReadingTilePresentation]
     public let slotCount: Int
     public let boardTiles: [String]
+    public var stimulusWord: String = ""
+    public var slotLabels: [String] = []
+    public var digraphTiles: [String] = []
+}
+
+extension ReadingItemPresentation {
+    /// The word or grapheme shown above the choices and tiles; a repaired split shows its letters apart.
+    static func stimulus(_ bank: ReadingBankItem) -> String {
+        let word = bank.words.first ?? bank.grapheme ?? ""
+        guard bank.r3Activity == .repairSplit, let grapheme = bank.grapheme else { return word }
+        let spaced = grapheme.map { String($0) }.joined(separator: " ")
+        return word.replacingOccurrences(of: grapheme, with: spaced)
+    }
+
+    static func slotLabels(count: Int, _ language: Language) -> [String] {
+        let template = TextTable.string("reading.slot.empty", language)
+        return (0..<count).map { template.replacingOccurrences(of: "%1", with: String($0 + 1)) }
+    }
 }
 
 extension Item {
@@ -130,7 +148,13 @@ extension Item {
         default:
             break
         }
-        return ReadingItemPresentation(dotStimulusCount: 0, choices: choices, orderingTiles: tiles,
-                                       slotCount: slotCount, boardTiles: boardTiles)
+        var result = ReadingItemPresentation(dotStimulusCount: 0, choices: choices, orderingTiles: tiles,
+                                             slotCount: slotCount, boardTiles: boardTiles)
+        result.stimulusWord = ReadingItemPresentation.stimulus(bank)
+        result.slotLabels = ReadingItemPresentation.slotLabels(count: slotCount, language)
+        if bank.r3Activity == .selectDigraph || bank.r3Activity == .repairSplit {
+            result.digraphTiles = (bank.grapheme ?? "").map { String($0) }
+        }
+        return result
     }
 }

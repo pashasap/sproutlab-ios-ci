@@ -82,16 +82,26 @@ struct TerrariumView: View {
         }
     }
 
+    private func centre(_ rect: LayoutRect) -> CGPoint {
+        CGPoint(x: rect.x + rect.width / 2, y: rect.y + rect.height / 2)
+    }
+
+    /// Controls are placed inside the viewport (the view's own width), never from the 1000 pt canvas.
     private var controls: some View {
-        ZStack(alignment: .topLeading) {
-            controlButton(model.closeControl, action: onBack)
-                .position(x: model.backPosition.x, y: model.backPosition.y)
-            controlButton(model.journalControl) { showJournal = true }
-                .position(x: model.scene.screenWidth - 44, y: model.backPosition.y)
-            controlButton(model.panLeftControl) { model.panLeft() }
-                .position(x: 40, y: model.scene.height / 2)
-            controlButton(model.panRightControl) { model.panRight() }
-                .position(x: model.scene.screenWidth - 40, y: model.scene.height / 2)
+        GeometryReader { proxy in
+            let screen = ScreenMetrics(width: Double(proxy.size.width), height: Double(proxy.size.height),
+                                       insets: SafeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            let frames = LayoutPolicy.terrariumControls(screen, sceneWidth: model.scene.width)
+            ZStack(alignment: .topLeading) {
+                controlButton(model.closeControl, action: onBack)
+                    .position(centre(frames.close))
+                controlButton(model.journalControl) { showJournal = true }
+                    .position(x: proxy.size.width - 16 - model.journalControl.width / 2, y: centre(frames.close).y)
+                controlButton(model.panLeftControl) { model.panLeft() }
+                    .position(centre(frames.panLeft))
+                controlButton(model.panRightControl) { model.panRight() }
+                    .position(centre(frames.panRight))
+            }
         }
     }
 

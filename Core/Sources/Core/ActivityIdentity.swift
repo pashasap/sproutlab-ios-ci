@@ -217,7 +217,8 @@ extension TextTable {
         "reading.speech.repair": TextEntry("Recolle les morceaux pour réparer le mot.",
                                            "Put the pieces back to fix the word."),
         "reading.choice.label": TextEntry("Lettre", "Letter"),
-        "reading.tile.position": TextEntry("position %1 sur %2", "position %1 of %2")
+        "reading.tile.position": TextEntry("Position %1", "Place %1"),
+        "reading.slot.empty": TextEntry("Case %1 vide", "Empty slot %1")
     ]
 }
 

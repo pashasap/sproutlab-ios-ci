@@ -18,6 +18,7 @@ public struct JournalCard: Equatable, Sendable {
     public var welcomeLabel: String?
     public var call: SoundRecipe?
     public var ear: JournalEar?
+    public var callPlayLabel: String?
     public var stamps: [Stamp] = []
 
     init(id: String, state: CollectibleState) {
@@ -97,6 +98,8 @@ public struct JournalModel: Equatable, Sendable {
                 name: item.name(language), fact: ResidentFacts.text(item.id, language),
                 control: TerrariumControl(accessibilityId: "sproutlab.journal.ear." + item.id,
                                           iconKey: "icon.hear", labelKey: "icon.hear.label", side: 56))
+            card.callPlayLabel = (language == .fr ? "Écouter le cri de " : "Listen to the call of ")
+                + item.name(language)
             let earned = record.stamps[item.id] ?? ResidentStamps()
             card.stamps = Array(Stamp.allCases.filter { earned.has($0) }.prefix(maxStamps))
         }

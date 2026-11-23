@@ -10,6 +10,9 @@ public struct JournalScreen: Equatable, Sendable {
     public let cards: [JournalCard]
     public let closeControl: TerrariumControl
 
+    /// The cards of the met residents, in table order.
+    public var metRows: [JournalCard] { cards.filter { $0.state == .met } }
+
     public init(record: ProgressRecord, language: Language) {
         let model = JournalModel(record: record, language: language)
         title = model.title

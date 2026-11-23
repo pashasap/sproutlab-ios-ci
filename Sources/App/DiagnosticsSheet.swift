@@ -24,6 +24,8 @@ struct DiagnosticsSheet: View {
                 Text(TextTable.string("gallery.open", language))
             }
             .buttonStyle(PrimaryButtonStyle())
+            .frame(minHeight: galleryControl.height)
+            .accessibilityIdentifier(galleryControl.accessibilityId)
             Button { dismiss() } label: {
                 Text(TextTable.string("diag.close", language))
             }
@@ -36,6 +38,8 @@ struct DiagnosticsSheet: View {
         .padding(24)
         .background(Palette.background.ignoresSafeArea())
     }
+
+    private var galleryControl: TerrariumControl { DiagnosticsScreen.forAuditStop().galleryButton }
 
     private var rows: [(key: String, value: String)] {
         [("diag.version", model.versionText), ("diag.build", model.buildText),

@@ -88,6 +88,12 @@ struct JournalView: View {
                 }
             }
             .accessibilityLabel(ear.name)
+            Button { model.tap(card.id) } label: {
+                Image(systemName: TextTable.string(ear.control.iconKey, .en))
+                    .frame(width: ear.control.side, height: ear.control.side)
+            }
+            .accessibilityIdentifier(ear.control.accessibilityId)
+            .accessibilityLabel(card.callPlayLabel ?? ear.name)
             VStack(alignment: .leading) {
                 Text(ear.name).font(.headline)
                 Text(ear.fact).font(.subheadline)
