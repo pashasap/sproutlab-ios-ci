@@ -113,12 +113,12 @@ public final class TrailViewModel {
     public func commit(_ round: RoundViewModel) {
         guard round.summary != nil, !round.isCommitted else { return }
         round.isCommitted = true
-        var progress = record.levels[round.levelId] ?? LevelProgress()
+        var progress = record.progress(for: round.levelId) ?? LevelProgress()
         let configurations = Set(round.items.map(\.configuration))
         if progress.visits == 0 || progress.lastSession != record.sessionCount { progress.visits += 1 }
         progress.unfamiliarSeen += configurations.subtracting(progress.configurationsSeen).count
         progress.configurationsSeen = configurations.union(progress.configurationsSeen).sorted()
-        record.levels[round.levelId] = progress
+        record.setProgress(progress, for: round.levelId)
         let correct = max(0, round.questionCount - round.wrongAttempts)
         record.recordRound(RoundEntry(levelId: round.levelId, date: Date(), firstTryCount: correct,
                                       helpUsed: round.sawWrongAnswer))

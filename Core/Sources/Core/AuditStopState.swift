@@ -42,7 +42,13 @@ public struct AuditStopState: Equatable, Sendable {
         "reading-build-word": Target(levelId: "reading-fr-r2", kind: "r2.buildWord"),
         "reading-select-digraph": Target(levelId: "reading-fr-r3", kind: "r3.selectDigraph"),
         "reading-blend-word": Target(levelId: "reading-fr-r3", kind: "r3.blendWord"),
-        "reading-repair-split": Target(levelId: "reading-fr-r3", kind: "r3.repairSplit")
+        "reading-repair-split": Target(levelId: "reading-fr-r3", kind: "r3.repairSplit"),
+        "reading-en-sounds": Target(levelId: "reading-en-en1", kind: "en1.graphemeSound"),
+        "reading-en-words": Target(levelId: "reading-en-en2", kind: "en2.changeGrapheme"),
+        "reading-en-digraphs": Target(levelId: "reading-en-en3", kind: "en3.digraph"),
+        "robot-c1": Target(levelId: "robot-c1", kind: "robot.C1"),
+        "robot-c2": Target(levelId: "robot-c2", kind: "robot.C2"),
+        "robot-c3": Target(levelId: "robot-c3", kind: "robot.C3")
     ]
 
     /// The first seed (counting up from 1) whose round holds the target kind, with the question index.
@@ -70,6 +76,10 @@ public struct AuditStopState: Equatable, Sendable {
 
     /// The kind a question belongs to: its math kind, or the reading rung and activity of its bank item.
     static func kind(of item: Item) -> String {
+        if let robot = item.robotId { return robot }
+        if let id = item.readingId, let english = ReadingENBank.item(id: id) {
+            return "\(english.rung.rawValue).\(english.activity.rawValue)"
+        }
         guard let id = item.readingId, let bank = ReadingBank.item(id: id) else { return "math.\(item.kind)" }
         if let activity = bank.r2Activity { return "r2.\(activity)" }
         if let activity = bank.r3Activity { return "r3.\(activity)" }

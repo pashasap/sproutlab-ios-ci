@@ -49,6 +49,9 @@ extension TextTable {
         IconDefinition(key: "icon.journal", symbol: "book.fill", labelFR: "Mon carnet de nature", labelEN: "My nature journal"),
         IconDefinition(key: "icon.bond", symbol: "rectangle.grid.2x2", labelFR: "Faire 10", labelEN: "Make 10"),
         IconDefinition(key: "icon.readingFR", symbol: "book.fill", labelFR: "Lecture en français",
-                       labelEN: "French reading")
+                       labelEN: "French reading"),
+        IconDefinition(key: "icon.readingEN", symbol: "book.fill", labelFR: "Lecture en anglais",
+                       labelEN: "English reading"),
+        IconDefinition(key: "icon.robot", symbol: "leaf.fill", labelFR: "Petit Robot", labelEN: "Little Robot")
     ]
 }

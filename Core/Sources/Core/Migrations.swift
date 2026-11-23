@@ -11,6 +11,13 @@ public enum Migrations {
 
     static let steps: [Int: Step] = [1: v1ToV2, 2: v2ToV3, 3: v3ToV4]
 
+    /// V4 to V5 keeps every field and adds the empty, separate readingEN section.
+    private static let v4ToV5: Step = { old in
+        var out = old
+        if out["readingEN"] == nil { out["readingEN"] = [String: Any]() }
+        return out
+    }
+
     /// V3 to V4 keeps every field and adds the empty journal stamps.
     private static let v3ToV4: Step = { old in
         var out = old

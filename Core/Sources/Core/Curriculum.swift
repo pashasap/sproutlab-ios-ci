@@ -69,9 +69,10 @@ public struct LevelDefinition: Sendable {
 
 public enum Curriculum {
     public static let titleKeys = ["trail.level.math-bonds-10.title", "trail.level.math-add-sub-20.title",
-                                   "trail.level.math-patterns-20.title"] + readingTitleKeys
+                                   "trail.level.math-patterns-20.title"] + readingTitleKeys + readingENTitleKeys
+        + robotTitleKeys
 
-    public static let all: [LevelDefinition] = mathLevels + readingLevels
+    public static let all: [LevelDefinition] = mathLevels + readingLevels + readingENLevels + robotLevels
 
     static let mathLevels: [LevelDefinition] = [
         LevelDefinition(

@@ -19,6 +19,10 @@ public enum TrailLaneHeaders {
         switch track {
         case "readingFR":
             return TrailLaneHeader(titleKey: readingKey, symbolName: "book.fill", language: language)
+        case "readingEN":
+            return TrailLaneHeader(titleKey: "icon.readingEN.label", symbolName: "book.fill", language: language)
+        case "robot":
+            return TrailLaneHeader(titleKey: "track.robot.name", symbolName: "leaf.fill", language: language)
         default:
             return TrailLaneHeader(titleKey: mathKey, symbolName: "number", language: language)
         }

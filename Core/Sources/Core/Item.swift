@@ -60,6 +60,8 @@ public struct Item: Sendable, Equatable {
     public private(set) var tenFrameFill: TenFrameFill = .rows
     /// The reading bank item this item stands for; nil for math items.
     public var readingId: String?
+    /// The robot level kind this item stands for ("robot.C1"); nil for every other item.
+    public var robotId: String?
     /// True for the icon-led notice that stands in for a reading question the language has no level for.
     public internal(set) var isNotice: Bool = false
     /// Text key of the notice; nil for every other item.
@@ -133,6 +135,7 @@ public struct Item: Sendable, Equatable {
         out.role = role
         out.tenFrameFill = tenFrameFill
         out.readingId = readingId
+        out.robotId = robotId
         out.isNotice = isNotice
         out.noticeTextKey = noticeTextKey
         out.iconKey = iconKey

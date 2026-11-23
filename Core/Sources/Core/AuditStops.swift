@@ -36,5 +36,11 @@ public enum AuditStops {
         AuditStop(id: "reading-select-digraph", root: "sproutlab.audit.reading-select-digraph", title: "Reading select the digraph", expectation: "The tile set shows the letters of a word and lets the child select the two that make one sound.", flows: [], defects: []),
         AuditStop(id: "reading-blend-word", root: "sproutlab.audit.reading-blend-word", title: "Reading blend the word", expectation: "The slot board for blending shows the sound slots of a word with their tiles to place.", flows: [], defects: []),
         AuditStop(id: "reading-repair-split", root: "sproutlab.audit.reading-repair-split", title: "Reading repair the split", expectation: "The tile set shows a word split in the wrong place and lets the child move the tiles to repair it.", flows: [], defects: []),
+        AuditStop(id: "reading-en-sounds", root: "sproutlab.audit.reading-en-sounds", title: "English reading sounds", expectation: "An EN1 question shows the letters of a sound or short word with three answer choices.", flows: [], defects: []),
+        AuditStop(id: "reading-en-words", root: "sproutlab.audit.reading-en-words", title: "English reading words", expectation: "An EN2 question shows a written word pair and asks which letter changed, with three answer choices.", flows: [], defects: []),
+        AuditStop(id: "reading-en-digraphs", root: "sproutlab.audit.reading-en-digraphs", title: "English reading digraphs", expectation: "An EN3 question shows a word with the digraph written out and three answer choices.", flows: [], defects: []),
+        AuditStop(id: "robot-c1", root: "sproutlab.audit.robot-c1", title: "Little Robot C1", expectation: "The C1 grid shows the robot, a row of arrow cards and a step control, with a prediction choice after a step.", flows: ["F-19"], defects: []),
+        AuditStop(id: "robot-c2", root: "sproutlab.audit.robot-c2", title: "Little Robot C2", expectation: "The C2 grid shows rocks, empty slots and a palette of four arrow buttons that are each at least 56 points.", flows: ["F-20"], defects: []),
+        AuditStop(id: "robot-c3", root: "sproutlab.audit.robot-c3", title: "Little Robot C3", expectation: "The C3 grid shows a short arrow program with a swap palette and a play control.", flows: ["F-21"], defects: []),
     ]
 }

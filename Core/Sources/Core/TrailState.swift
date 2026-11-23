@@ -27,7 +27,7 @@ public enum MasteryPolicy {
     public static let unfamiliarNeeded = 2
 
     public static func suggestsNext(level: String, record: ProgressRecord) -> Bool {
-        guard let p = record.levels[level] else { return false }
+        guard let p = record.progress(for: level) else { return false }
         return p.independentCompletions >= independentNeeded
             && p.visits >= visitsNeeded
             && p.unfamiliarSeen >= unfamiliarNeeded
@@ -45,7 +45,7 @@ public enum ReviewScheduler {
     }
 
     public static func isDue(_ levelId: String, record: ProgressRecord) -> Bool {
-        guard let p = record.levels[levelId], p.completions >= 1,
+        guard let p = record.progress(for: levelId), p.completions >= 1,
               let next = nextReviewSession(for: p) else { return false }
         return next <= record.sessionCount
     }
@@ -53,6 +53,8 @@ public enum ReviewScheduler {
     /// Moves a reviewed level to its next stage; it never changes completion.
     static func advance(_ levelId: String, in record: inout ProgressRecord) {
         guard isDue(levelId, record: record) else { return }
-        record.levels[levelId]?.reviewStage += 1
+        guard var progress = record.progress(for: levelId) else { return }
+        progress.reviewStage += 1
+        record.setProgress(progress, for: levelId)
     }
 }

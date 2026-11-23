@@ -45,5 +45,5 @@ extension Recipe {
     /// One row per resident, in arrival order.
     public static let table: [Recipe] = [
         sunflower, earthworm, ant, fern, ladybug, treeFrog, glowingMushroom, axolotl, butterfly
-    ] + meadowTable
+    ] + meadowTable + robotTable
 }

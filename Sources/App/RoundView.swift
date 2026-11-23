@@ -7,7 +7,11 @@ struct RoundScreen: View {
 
     var body: some View {
         if let round = app.round {
-            RoundView(app: app, round: round)
+            if round.robotKind != nil {
+                RobotRoundView(round: round, language: app.language)
+            } else {
+                RoundView(app: app, round: round)
+            }
         }
     }
 }

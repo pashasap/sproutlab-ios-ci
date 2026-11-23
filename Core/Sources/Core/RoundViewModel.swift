@@ -74,6 +74,10 @@ public final class RoundViewModel {
     var sawWrongAnswer: Bool { round.wrongAttempts > 0 }
     var wrongAttempts: Int { round.wrongAttempts }
 
+    /// "robot.C1", "robot.C2" or "robot.C3" when the current question is a robot level; nil otherwise.
+    public var robotKind: String? { round.currentItem.robotId }
+    /// The seed that makes the robot grid of the current question.
+    public var robotSeed: UInt64 { UInt64(round.currentItem.configuration) }
     public var questionNumber: Int { round.currentIndex + 1 }
     public var questionCount: Int { round.items.count }
     public var promptKey: String { round.currentItem.promptKey }
@@ -97,7 +101,7 @@ public final class RoundViewModel {
     public func switchLanguage(_ newLanguage: Language) {
         let changed = newLanguage != language
         language = newLanguage
-        if changed, frenchItems.contains(where: { $0.readingId != nil }) {
+        if changed, frenchItems.contains(where: { $0.readingId.flatMap(ReadingBank.item(id:)) != nil }) {
             let french = frenchItems
             round = round.replacingUnanswered { index, item in
                 ReadingLanguages.hasReadingLevel(newLanguage)
@@ -155,6 +159,9 @@ public final class RoundViewModel {
     private func resetKit() {
         kit = ReadingKitSession.make(for: round.currentItem)
     }
+
+    /// A robot level question is finished: moves on to the next one.
+    public func finishRobotQuestion() { answerFromKit(correct: true) }
 
     /// Answer by choice index; same meaning as `select(choiceIndex:)`.
     public func submit(_ choice: Int) { select(choiceIndex: choice) }

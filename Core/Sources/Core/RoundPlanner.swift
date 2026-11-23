@@ -20,7 +20,7 @@ enum RoundPlanner {
     static let replayTries = 12
 
     static func plan(_ input: PlanInput, seeds: () -> UInt64) -> RoundPlan {
-        let progress = input.record.levels[input.level.levelId]
+        let progress = input.record.progress(for: input.level.levelId)
         let replay = (progress?.completions ?? 0) >= 1
         var seed = seeds()
         var items = input.level.generator(seed)

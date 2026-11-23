@@ -81,6 +81,7 @@ public enum ColourTokens {
         "colour.glow": Swatch((0.55, 0.95, 0.80), (0.50, 1.00, 0.80)),
         "colour.gill": Swatch((0.85, 0.80, 0.90), (0.75, 0.70, 0.85)),
         "colour.readingFR": Swatch((0.45, 0.22, 0.60), (0.78, 0.62, 0.92)),
+        "colour.readingEN": Swatch((0.05, 0.38, 0.45), (0.55, 0.85, 0.90)),
         "colour.wing": Swatch((0.95, 0.55, 0.10), (1.00, 0.70, 0.25)),
         // Creature body colours are identical in light and dark and sit in a mid-luminance band
         // (about 0.15 to 0.19) so they keep 3:1 against every light and dark ground.
@@ -98,7 +99,10 @@ public enum ColourTokens {
         "colour.body.poppy": same(0.85, 0.15, 0.12),
         "colour.body.dandelion": same(0.60, 0.40, 0.00),
         "colour.body.robin": same(0.80, 0.30, 0.10),
-        "colour.body.cricket": same(0.35, 0.50, 0.15)
+        "colour.body.cricket": same(0.35, 0.50, 0.15),
+        "colour.body.robot": same(0.35, 0.45, 0.60),
+        "colour.body.sprout": same(0.18, 0.50, 0.20),
+        "colour.body.seed": same(0.60, 0.40, 0.25)
     ]
 
     private static func same(_ r: Double, _ g: Double, _ b: Double) -> Swatch {

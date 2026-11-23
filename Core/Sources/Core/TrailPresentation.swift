@@ -83,11 +83,11 @@ public struct TrailTilePresentation: Sendable, Equatable {
 extension TrailState {
     /// The state of a level given the level before it in its lane (nil for the first).
     static func resolve(level: LevelDefinition, previous: String?, record: ProgressRecord) -> TrailState {
-        if (record.levels[level.levelId]?.completions ?? 0) >= 1 {
+        if (record.progress(for: level.levelId)?.completions ?? 0) >= 1 {
             return ReviewScheduler.isDue(level.levelId, record: record) ? .dueForReview : .completed
         }
         guard let previous else { return .open }
-        guard (record.levels[previous]?.completions ?? 0) >= 1 else { return .locked(requires: previous) }
+        guard (record.progress(for: previous)?.completions ?? 0) >= 1 else { return .locked(requires: previous) }
         return MasteryPolicy.suggestsNext(level: previous, record: record) ? .suggested : .open
     }
 }

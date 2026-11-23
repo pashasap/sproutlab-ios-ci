@@ -12,6 +12,11 @@ public struct ProgressRecord: Equatable, Codable, Sendable {
     public var collection = CollectionSection()
     public var creations = CreationsSection()
     public var stamps: [String: ResidentStamps] = [:]
+    public var readingEN = ReadingENProgress()
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, settings, stars, levels, sessionCount, collection, creations, stamps, readingEN
+    }
 
     public init() {}
 
@@ -31,6 +36,20 @@ public struct ProgressRecord: Equatable, Codable, Sendable {
         collection = try c.decodeIfPresent(CollectionSection.self, forKey: .collection) ?? CollectionSection()
         creations = try c.decodeIfPresent(CreationsSection.self, forKey: .creations) ?? CreationsSection()
         stamps = try c.decodeIfPresent([String: ResidentStamps].self, forKey: .stamps) ?? [:]
+        readingEN = try c.decodeIfPresent(ReadingENProgress.self, forKey: .readingEN) ?? ReadingENProgress()
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(schemaVersion, forKey: .schemaVersion)
+        try c.encode(settings, forKey: .settings)
+        try c.encode(stars, forKey: .stars)
+        try c.encode(levels, forKey: .levels)
+        try c.encode(sessionCount, forKey: .sessionCount)
+        try c.encode(collection, forKey: .collection)
+        try c.encode(creations, forKey: .creations)
+        try c.encode(stamps, forKey: .stamps)
+        if !readingEN.isEmpty { try c.encode(readingEN, forKey: .readingEN) }
     }
 
     public static func fresh() -> ProgressRecord { ProgressRecord() }
@@ -76,6 +95,10 @@ public struct ProgressRecord: Equatable, Codable, Sendable {
 
     /// One finished round: a fixed award, one more completion, history capped at the newest 50.
     public mutating func recordRound(_ entry: RoundEntry) {
+        if ReadingENBank.owns(levelId: entry.levelId) {
+            recordReadingENRound(entry)
+            return
+        }
         stars.total += ProgressRecord.starsPerRound
         var progress = levels[entry.levelId, default: LevelProgress()]
         progress.completions += 1

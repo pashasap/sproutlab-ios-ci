@@ -20,6 +20,7 @@ public enum ContentLint {
         for token in registry.colourTokens where !ContentRegistry.knownColourTokens.contains(token) {
             findings.append(ContentFinding(kind: "unknown-colour", subject: token))
         }
+        findings += readingENFindings(ReadingENBank.allItems)
         let texts = mergedTexts(registry.tables)
         for level in registry.levels {
             findings += levelFindings(level, registry: registry, texts: texts)
@@ -70,7 +71,7 @@ public enum ContentLint {
         let generated = items(level)
         let configurations = Set(generated.map { "\($0.kind.rawValue):\($0.configuration)" })
         var findings: [ContentFinding] = []
-        if configurations.count < 24 && level.strand != "readingFR" {
+        if configurations.count < 24 && level.strand != "readingFR" && level.strand != "readingEN" {
             findings.append(ContentFinding(kind: "too-few-configurations", subject: level.levelId))
         }
         for key in [level.titleKey, level.iconKey] + level.helpSteps where texts[key] == nil {

@@ -21,6 +21,12 @@ let auditStops: [(id: String, root: String)] = [
     (id: "reading-select-digraph", root: "sproutlab.audit.reading-select-digraph"),
     (id: "reading-blend-word", root: "sproutlab.audit.reading-blend-word"),
     (id: "reading-repair-split", root: "sproutlab.audit.reading-repair-split"),
+    (id: "reading-en-sounds", root: "sproutlab.audit.reading-en-sounds"),
+    (id: "reading-en-words", root: "sproutlab.audit.reading-en-words"),
+    (id: "reading-en-digraphs", root: "sproutlab.audit.reading-en-digraphs"),
+    (id: "robot-c1", root: "sproutlab.audit.robot-c1"),
+    (id: "robot-c2", root: "sproutlab.audit.robot-c2"),
+    (id: "robot-c3", root: "sproutlab.audit.robot-c3"),
 ]
 
 extension AuditStopsUITests {
@@ -46,4 +52,10 @@ extension AuditStopsUITests {
     @MainActor func test_020_reading_select_digraph() { visit("reading-select-digraph", root: "sproutlab.audit.reading-select-digraph") }
     @MainActor func test_021_reading_blend_word() { visit("reading-blend-word", root: "sproutlab.audit.reading-blend-word") }
     @MainActor func test_022_reading_repair_split() { visit("reading-repair-split", root: "sproutlab.audit.reading-repair-split") }
+    @MainActor func test_023_reading_en_sounds() { visit("reading-en-sounds", root: "sproutlab.audit.reading-en-sounds") }
+    @MainActor func test_024_reading_en_words() { visit("reading-en-words", root: "sproutlab.audit.reading-en-words") }
+    @MainActor func test_025_reading_en_digraphs() { visit("reading-en-digraphs", root: "sproutlab.audit.reading-en-digraphs") }
+    @MainActor func test_026_robot_c1() { visit("robot-c1", root: "sproutlab.audit.robot-c1") }
+    @MainActor func test_027_robot_c2() { visit("robot-c2", root: "sproutlab.audit.robot-c2") }
+    @MainActor func test_028_robot_c3() { visit("robot-c3", root: "sproutlab.audit.robot-c3") }
 }

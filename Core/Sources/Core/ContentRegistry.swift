@@ -35,7 +35,7 @@ public struct ContentRegistry: Sendable {
     public static let knownColourTokens: Set<String> = Set([
         "colour.math", "colour.counting", "colour.bond",
         "colour.green", "colour.locked", "colour.accent", "colour.suggested", "colour.review",
-        "colour.dot", "colour.mark", "colour.markHalo", "colour.ink"
+        "colour.robot", "colour.dot", "colour.mark", "colour.markHalo", "colour.ink"
     ]).union(ColourTokens.allTokens)
 
     public static let textTables: [ContentTextTable] = [
@@ -61,7 +61,9 @@ public struct ContentRegistry: Sendable {
         ContentTextTable(id: "reading", entries: TextTable.readingTexts.merging(TextTable.readingR1Texts) { first, _ in first }),
         ContentTextTable(id: "reading-r2", entries: TextTable.readingR2Texts),
         ContentTextTable(id: "reading-r3", entries: TextTable.readingR3Texts),
-        ContentTextTable(id: "reading-recipes", entries: TextTable.readingRecipeTexts)
+        ContentTextTable(id: "reading-recipes", entries: TextTable.readingRecipeTexts),
+        ContentTextTable(id: "reading-en", entries: TextTable.readingENTexts),
+        ContentTextTable(id: "robot", entries: TextTable.robotTexts.merging(TextTable.robotRecipeTexts) { first, _ in first })
     ]
 }
 
