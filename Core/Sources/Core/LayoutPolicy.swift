@@ -151,6 +151,22 @@ extension LayoutPolicy {
                         safe.maxY - controlMargin - side))
     }
 
+    public static let terrariumResidentSide: Double = 64
+    static let terrariumColumnCentres: [Double] = [0.275, 0.50, 0.725]
+    static let terrariumRowCount = 5
+
+    /// Residents sit on a 3 x 5 grid inside the viewport; rows run from y = 140 to height - 160.
+    public static func terrariumResidentPosition(index: Int, total: Int, screen: ScreenMetrics) -> LayoutRect {
+        let slot = max(0, min(index, max(1, total) - 1))
+        let columns = terrariumColumnCentres.count
+        let top = 140.0, bottom = screen.height - 160
+        let step = terrariumRowCount > 1 ? (bottom - top) / Double(terrariumRowCount - 1) : 0
+        let row = min(slot / columns, terrariumRowCount - 1)
+        let side = terrariumResidentSide
+        let centreX = screen.width * terrariumColumnCentres[slot % columns]
+        return LayoutRect(x: centreX - side / 2, y: top + Double(row) * step - side / 2, width: side, height: side)
+    }
+
     private static func wrap(count: Int, cell: Double, availableWidth: Double) -> (rows: [[Int]], widths: [Double]) {
         let fit = max(1, Int(((availableWidth + cellSpacing) / (cell + cellSpacing)).rounded(.down)))
         let perRow = min(fit, maximumSlotBoardTiles)

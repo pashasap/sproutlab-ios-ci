@@ -79,8 +79,8 @@ struct AppDiagnostics: DiagnosticsSource, @unchecked Sendable {
     var droppedFrames: Int { MainActor.assumeIsolated { environment.frames.droppedFrames } }
     var lastSave: SaveReport? { MainActor.assumeIsolated { environment.app.lastSave } }
     var audioEngine: AudioEngineState { environment.music.engineState }
-    var frenchVoiceName: String? { environment.speech.voiceName(tag: "fr-FR") }
-    var englishVoiceName: String? { environment.speech.voiceName(tag: "en-US") }
+    var frenchVoiceName: String? { environment.audit != nil ? nil : environment.speech.voiceName(tag: "fr-FR") }
+    var englishVoiceName: String? { environment.audit != nil ? nil : environment.speech.voiceName(tag: "en-US") }
 
     private static func bundleValue(_ key: String) -> String {
         Bundle.main.object(forInfoDictionaryKey: key) as? String ?? "-"

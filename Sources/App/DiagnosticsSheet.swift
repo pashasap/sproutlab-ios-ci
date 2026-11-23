@@ -12,13 +12,17 @@ struct DiagnosticsSheet: View {
             Text(TextTable.string("settings.diagnostics", language))
                 .font(.title2.weight(.bold))
                 .accessibilityAddTraits(.isHeader)
-            ForEach(rows, id: \.key) { row in
-                HStack {
-                    Text(TextTable.string(row.key, language))
-                    Spacer()
-                    Text(verbatim: row.value).monospacedDigit()
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(rows, id: \.key) { row in
+                        HStack {
+                            Text(TextTable.string(row.key, language))
+                            Spacer()
+                            Text(verbatim: row.value).monospacedDigit()
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
                 }
-                .accessibilityElement(children: .combine)
             }
             Button { showGallery = true } label: {
                 Text(TextTable.string("gallery.open", language))

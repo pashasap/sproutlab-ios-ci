@@ -45,7 +45,7 @@ struct TerrariumView: View {
     private func garden(_ frame: TerrariumFrame) -> some View {
         GeometryReader { proxy in
             gardenStack(frame, proxy)
-                .frame(width: proxy.size.width, height: proxy.size.height)
+                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
                 .clipped()
         }
         .gesture(DragGesture(minimumDistance: 40).onEnded { drag in
@@ -55,23 +55,39 @@ struct TerrariumView: View {
     }
 
     @ViewBuilder
-    private func layerView(_ layer: GardenLayer, _ frame: TerrariumFrame, width: CGFloat) -> some View {
+    private func layerView(_ layer: GardenLayer, _ frame: TerrariumFrame, size: CGSize) -> some View {
         if layer.id == "stage" {
+            let screen = ScreenMetrics(width: Double(size.width), height: Double(size.height),
+                                       insets: SafeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            let ids = model.habitats.flatMap(\.residentIds)
             ZStack(alignment: .topLeading) {
-                ForEach(model.habitats, id: \.id) { habitat in
-                    ForEach(habitat.residentIds, id: \.self) { id in
-                        if let resident = model.resident(id) {
-                            ResidentView(model: model, resident: resident, viewportWidth: width,
-                                         pose: frame.poses[id] ?? PoseScheduler.stillPose(id))
-                        }
+                ForEach(Array(ids.enumerated()), id: \.element) { index, id in
+                    if let resident = model.resident(id) {
+                        let slot = LayoutPolicy.terrariumResidentPosition(index: index, total: ids.count, screen: screen)
+                        ResidentView(model: model, resident: resident,
+                                     centre: CGPoint(x: slot.x + slot.width / 2, y: slot.y + slot.height / 2),
+                                     pose: frame.poses[id] ?? PoseScheduler.stillPose(id),
+                                     animates: !reduceMotion && !ProcessInfo.processInfo.arguments.contains("-auditStop"))
                     }
                 }
             }
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier(model.habitats.first?.accessibilityId ?? "")
         } else {
-            Color.clear.frame(width: model.scene.width, height: model.scene.height)
+            Color.clear.frame(width: size.width, height: size.height)
         }
+    }
+
+    /// Green hills, meadow grass and soil bands from Palette tokens.
+    private func backdrop(_ size: CGSize) -> some View {
+        VStack(spacing: 0) {
+            Palette.token("colour.green").opacity(0.35).frame(height: size.height * 0.30)
+            Palette.accent.opacity(0.45).frame(height: size.height * 0.40)
+            Palette.token("colour.review").opacity(0.30).frame(height: size.height * 0.18)
+            Palette.locked.opacity(0.35).frame(height: size.height * 0.12)
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
     }
 
     private func centre(_ rect: LayoutRect) -> CGPoint {
@@ -81,8 +97,9 @@ struct TerrariumView: View {
     private func gardenStack(_ frame: TerrariumFrame, _ proxy: GeometryProxy) -> some View {
         ZStack(alignment: .topLeading) {
             TerrariumSkyView(frame: frame, scheme: scheme)
+            backdrop(proxy.size)
             ForEach(model.scene.layers, id: \.id) { layer in
-                layerView(layer, frame, width: proxy.size.width)
+                layerView(layer, frame, size: proxy.size)
                     .offset(x: -model.panOffset * layer.parallax)
             }
             controls(frame, proxy)
@@ -112,8 +129,10 @@ struct TerrariumView: View {
         Button(action: action) {
             Image(systemName: TextTable.string(control.iconKey, .en)).font(.title)
                 .scaleEffect(x: control.mirrorsIcon ? -1 : 1, y: 1)
+                .foregroundStyle(Palette.ink)
         }
         .frame(width: control.width, height: control.height)
+        .background(Circle().fill(Palette.card.opacity(0.9)))
         .accessibilityLabel(control.label(model.language))
         .accessibilityIdentifier(control.accessibilityId)
     }
@@ -122,8 +141,9 @@ struct TerrariumView: View {
 private struct ResidentView: View {
     let model: TerrariumViewModel
     let resident: TerrariumResident
-    let viewportWidth: CGFloat
+    let centre: CGPoint
     let pose: Pose
+    let animates: Bool
     @State private var tilt = false
 
     var body: some View {
@@ -147,10 +167,10 @@ private struct ResidentView: View {
             }
         }
         .frame(width: area.width, height: area.height)
-        .position(x: min(max(40, resident.position.x), max(40, viewportWidth - 40)), y: resident.position.y)
+        .position(centre)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(resident.accessibilityId)
-        .onAppear { if resident.wobble == .animated { withAnimation(.easeInOut(duration: wobbleSeconds).repeatForever()) { tilt = true } } }
+        .onAppear { if animates, !model.reduceMotion, resident.wobble == .animated { withAnimation(.easeInOut(duration: wobbleSeconds).repeatForever()) { tilt = true } } }
     }
 
     /// Creature colours come from the light tokens in both appearances.

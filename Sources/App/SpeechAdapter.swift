@@ -1,9 +1,10 @@
 import AVFoundation
+import Foundation
 import Core
 
 /// Speaks prompts with AVSpeechSynthesizer; used only from the main thread by the view models.
 final class SpeechAdapter: SpeechService, @unchecked Sendable {
-    private let synthesizer = AVSpeechSynthesizer()
+    private lazy var synthesizer = AVSpeechSynthesizer()
 
     func speak(voiceTag: String, text: String) throws -> SpeechOutcome {
         guard let voice = AVSpeechSynthesisVoice(language: voiceTag) else { return .voiceMissing }
@@ -16,6 +17,7 @@ final class SpeechAdapter: SpeechService, @unchecked Sendable {
     }
 
     func voiceName(tag: String) -> String? {
-        AVSpeechSynthesisVoice(language: tag)?.name
+        if ProcessInfo.processInfo.arguments.contains("-auditStop") { return nil }
+        return AVSpeechSynthesisVoice(language: tag)?.name
     }
 }
