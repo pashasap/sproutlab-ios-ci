@@ -4,6 +4,8 @@ import Core
 struct DiagnosticsSheet: View {
     let model: DiagnosticsModel
     let language: Language
+    let app: AppViewModel
+    @State private var confirmReset = false
     @Environment(\.dismiss) private var dismiss
     @State private var showGallery = false
 
@@ -24,6 +26,7 @@ struct DiagnosticsSheet: View {
                     }
                 }
             }
+            developerControls
             Button { showGallery = true } label: {
                 Text(TextTable.string("gallery.open", language))
             }
@@ -38,9 +41,29 @@ struct DiagnosticsSheet: View {
         .sheet(isPresented: $showGallery) {
             GalleryView(language: language)
         }
+        .alert(TextTable.string("diag.reset.title", language), isPresented: $confirmReset) {
+            Button(TextTable.string("diag.reset.cancel", language), role: .cancel) {
+                app.resetAllProgress(confirmed: false)
+            }
+            Button(TextTable.string("diag.reset.confirm", language), role: .destructive) {
+                app.resetAllProgress(confirmed: true)
+            }
+        } message: {
+            Text(TextTable.string("diag.reset.message", language))
+        }
         .foregroundStyle(Palette.ink)
         .padding(24)
         .background(Palette.background.ignoresSafeArea())
+    }
+
+    @ViewBuilder private var developerControls: some View {
+        Toggle(TextTable.string("diag.developer", language),
+               isOn: Binding(get: { app.developerMode }, set: { app.setDeveloperMode($0) }))
+            .accessibilityIdentifier("diag.developer")
+        Button(role: .destructive) { confirmReset = true } label: {
+            Text(TextTable.string("diag.reset", language))
+        }
+        .accessibilityIdentifier("diag.reset")
     }
 
     private var galleryControl: TerrariumControl { DiagnosticsScreen.forAuditStop().galleryButton }

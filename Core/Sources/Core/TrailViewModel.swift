@@ -18,6 +18,8 @@ public struct TrailRow: Equatable, Sendable {
 public final class TrailViewModel {
     public private(set) var record: ProgressRecord
     public private(set) var language: Language
+    /// Session-only: shows every level unlocked; never part of the record.
+    public var developerMode = false
     private let catalog: LevelCatalog
     private let services: Services?
     private var lastItems: [String: [Item]] = [:]
@@ -88,8 +90,11 @@ public final class TrailViewModel {
     }
 
     private func state(_ lane: [LevelDefinition], at index: Int) -> TrailState {
-        TrailState.resolve(level: lane[index], previous: index > 0 ? lane[index - 1].levelId : nil,
-                           record: record)
+        let resolved = TrailState.resolve(level: lane[index],
+                                          previous: index > 0 ? lane[index - 1].levelId : nil,
+                                          record: record)
+        if developerMode, case .locked = resolved { return .open }
+        return resolved
     }
 
     // MARK: rounds

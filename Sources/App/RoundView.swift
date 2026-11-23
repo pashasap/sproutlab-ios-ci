@@ -74,7 +74,8 @@ struct RoundView: View {
 
     private var promptCard: some View {
         VStack(spacing: 16) {
-            PromptView(identity: round.identity, language: app.language)
+            PromptView(identity: round.identity, language: app.language,
+                       englishText: round.readingPresentation?.promptText ?? "")
             Button { speak() } label: {
                 Image(systemName: ChromeCatalog.symbolName(for: .ear))
                     .font(.title2)

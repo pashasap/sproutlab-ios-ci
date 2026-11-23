@@ -45,10 +45,18 @@ public enum RobotRoute {
     }
 }
 
+/// Colour tokens of a bordered arrow card; the app maps `card` to Palette.card.
+public struct RobotCardStyle: Equatable, Sendable {
+    public let fill: String
+    public let stroke: String
+    public static let standard = RobotCardStyle(fill: "card", stroke: "accent")
+}
+
 /// C1: pre-laid arrow cards on a 3x3 or 4x4 grid.
 public struct RobotC1Presentation: Equatable, Sendable {
     public let world: GridWorld
     public let cards: [GridMove]
+    public var cardStyle: RobotCardStyle? { RobotCardStyle.standard }
 
     public init(world: GridWorld, cards: [GridMove]) {
         self.world = world
@@ -75,6 +83,9 @@ public struct RobotC2Presentation: Equatable, Sendable {
     public let slotCount: Int
     public let palette: [GridMove]
     public let referenceRoute: [GridMove]
+    public var rockCount: Int { world.rocks.count }
+    public var rockIcon: String { RobotText.rockSymbol }
+    public var paletteSide: Double { RobotLayout.paletteSide }
 
     public static func make(seed: UInt64) -> RobotC2Presentation {
         var rng = SeededRandom(seed: seed ^ 0xC2C2)
@@ -85,7 +96,7 @@ public struct RobotC2Presentation: Equatable, Sendable {
         let cells = RobotRoute.cells(open, route)
         var world = GridWorld(width: side, height: side, start: open.start, goal: cells[cells.count - 1])
         let free = (0..<side * side).map { GridPoint($0 % side, $0 / side) }.filter { !cells.contains($0) }
-        let rockCount = min(free.count, 1 + rng.below(2))
+        let rockCount = min(free.count, 2 + rng.below(2))
         for point in rng.shuffled(free).prefix(rockCount) { world.addRock(point) }
         return RobotC2Presentation(world: world, slotCount: count, palette: GridMove.allCases,
                                    referenceRoute: route)
@@ -97,6 +108,10 @@ public struct RobotC3Presentation: Equatable, Sendable {
     public let world: GridWorld
     public let cards: [GridMove]
     public let fixedCards: [GridMove]
+    /// The four arrows offered from the start, next to the program and the play control.
+    public var swapPalette: [GridMove] { GridMove.allCases }
+    public var paletteSide: Double { RobotLayout.paletteSide }
+    public var hasPlayControl: Bool { true }
     public var discrepancyCount: Int { cards.indices.filter { cards[$0] != fixedCards[$0] }.count }
 
     public static func make(seed: UInt64) -> RobotC3Presentation {

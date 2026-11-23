@@ -67,7 +67,7 @@ struct RootView: View {
         .modifier(AuditRoot(launch: environment.audit))
         .sheet(isPresented: Binding(get: { app.diagnosticsVisible || auditDiagnostics },
                                     set: { app.setDiagnosticsVisible($0); if !$0 { auditDiagnostics = false } })) {
-            DiagnosticsSheet(model: environment.diagnostics, language: app.language)
+            DiagnosticsSheet(model: environment.diagnostics, language: app.language, app: app)
                 .auditRoot(root(for: .diagnostics))
         }
         .sheet(isPresented: Binding(get: { app.terrariumVisible },

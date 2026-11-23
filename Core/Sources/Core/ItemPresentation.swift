@@ -95,6 +95,8 @@ public struct ReadingItemPresentation: Sendable, Equatable {
     public let slotCount: Int
     public let boardTiles: [String]
     public var stimulusWord: String = ""
+    /// English prompt of an English reading item; empty for the French bank.
+    public var promptText: String = ""
     public var slotLabels: [String] = []
     public var digraphTiles: [String] = []
 }
@@ -117,6 +119,9 @@ extension ReadingItemPresentation {
 extension Item {
     /// Presentation data of a reading question; nil for math items and notices.
     public func readingPresentation(_ language: Language) -> ReadingItemPresentation? {
+        if !isNotice, let id = readingId, let english = ReadingENBank.item(id: id) {
+            return englishReadingPresentation(english, language)
+        }
         guard !isNotice, let id = readingId, let bank = ReadingBank.item(id: id) else { return nil }
         var choices: [ReadingChoicePresentation] = []
         var tiles: [ReadingTilePresentation] = []

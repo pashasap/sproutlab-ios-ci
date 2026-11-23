@@ -5,11 +5,13 @@ import Core
 struct PromptView: View {
     let identity: ActivityIdentity
     let language: Language
+    /// English prompt of an English reading item; when set it replaces the table prompt.
+    var englishText: String = ""
 
     var body: some View {
         VStack(spacing: 8) {
             IdentityBadge(identity: identity, language: language)
-            segments.font(.title.weight(.bold))
+            (englishText.isEmpty ? segments : Text(verbatim: englishText)).font(.title.weight(.bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.ink)
         }

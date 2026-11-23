@@ -87,6 +87,27 @@ public final class AppViewModel {
     /// Title long-press (3 s): opens diagnostics and never navigates.
     public func titleLongPressCompleted() {
         diagnosticsVisible = true
+        setDeveloperMode(true)
+    }
+
+    /// Session-only developer mode: every level reads unlocked; the record is untouched.
+    public var developerMode: Bool { trail.developerMode }
+
+    public func setDeveloperMode(_ on: Bool) {
+        trail.developerMode = on
+    }
+
+    /// Replaces the record with a clean one and saves it at once; does nothing unless confirmed.
+    public func resetAllProgress(confirmed: Bool) {
+        guard confirmed else { return }
+        var clean = ProgressRecord.fresh()
+        clean.language = record.language
+        clean.musicOn = record.musicOn
+        record = clean
+        totalStars = record.totalStars
+        completedLevels = record.completedLevels
+        trail.update(record: record, language: language)
+        persist()
     }
 
     public func setDiagnosticsVisible(_ visible: Bool) {

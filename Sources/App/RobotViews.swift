@@ -68,13 +68,35 @@ struct RobotPredictionRow: View {
     }
 }
 
+/// An arrow drawn in a bordered card; fill and stroke come from the Core card style.
+struct RobotArrowCard: View {
+    let symbol: String
+    let side: Double
+    var style: RobotCardStyle = .standard
+
+    private func colour(_ token: String) -> Color {
+        token == "card" ? Palette.card : Palette.accent
+    }
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.title2)
+            .foregroundStyle(Palette.ink)
+            .frame(width: side, height: side)
+            .background(colour(style.fill), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(colour(style.stroke), lineWidth: 2))
+    }
+}
+
 struct RobotC1View: View {
     let language: Language
     let onDone: () -> Void
     @State private var round: RobotC1Round
 
     init(seed: UInt64, language: Language, onDone: @escaping () -> Void) {
-        _round = State(initialValue: RobotC1Round(presentation: RobotC1Presentation.make(seed: seed)))
+        let audit = ProcessInfo.processInfo.arguments.contains("-auditStop")
+        _round = State(initialValue: audit ? RobotC1Round.auditStop(seed: seed)
+                       : RobotC1Round(presentation: RobotC1Presentation.make(seed: seed)))
         self.language = language
         self.onDone = onDone
     }
@@ -83,7 +105,8 @@ struct RobotC1View: View {
         VStack(spacing: 16) {
             RobotGridView(world: round.presentation.world, robot: round.position)
             HStack { ForEach(Array(round.presentation.cards.enumerated()), id: \.offset) { _, move in
-                Image(systemName: RobotText.arrow(move)).frame(width: 44, height: 44)
+                RobotArrowCard(symbol: RobotText.arrow(move), side: RobotLayout.slotSide,
+                               style: round.presentation.cardStyle ?? .standard)
             } }
             RobotPredictionRow(choices: round.predictionChoices, language: language) { round.predict($0) }
             HStack {
@@ -137,6 +160,7 @@ struct RobotC3View: View {
     let language: Language
     let onDone: () -> Void
     @State private var round: RobotC3Round
+    @State private var selected: Int?
 
     init(seed: UInt64, language: Language, onDone: @escaping () -> Void) {
         _round = State(initialValue: RobotC3Round(presentation: RobotC3Presentation.make(seed: seed)))
@@ -153,16 +177,16 @@ struct RobotC3View: View {
                         Image(systemName: RobotText.markerSymbol)
                             .accessibilityLabel(TextTable.string("robot.marker", language))
                     }
-                    Image(systemName: RobotText.arrow(move))
-                        .frame(width: RobotLayout.slotSide, height: RobotLayout.slotSide)
+                    RobotArrowCard(symbol: RobotText.arrow(move), side: RobotLayout.slotSide)
+                        .onTapGesture { selected = index }
                 }
             } }
-            if let marked = round.markerIndex {
-                HStack { ForEach(GridMove.allCases, id: \.self) { move in
-                    RobotIconButton(symbol: RobotText.arrow(move), label: RobotText.label(move, language),
-                                    side: RobotLayout.paletteSide) { round.swap(index: marked, to: move) }
-                } }
-            }
+            HStack { ForEach(round.presentation.swapPalette, id: \.self) { move in
+                RobotIconButton(symbol: RobotText.arrow(move), label: RobotText.label(move, language),
+                                side: round.presentation.paletteSide) {
+                    if let target = selected ?? round.markerIndex { round.swap(index: target, to: move) }
+                }
+            } }
             RobotIconButton(symbol: RobotText.playSymbol, label: TextTable.string("robot.play", language),
                             side: RobotLayout.slotSide) { round.play(); if round.isComplete { onDone() } }
         }

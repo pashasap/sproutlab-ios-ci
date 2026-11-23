@@ -14,7 +14,14 @@ extension TextTable {
         "diag.audio": TextEntry("Moteur audio", "Audio engine"),
         "diag.voice.fr": TextEntry("Voix française", "French voice"),
         "diag.voice.en": TextEntry("Voix anglaise", "English voice"),
-        "diag.close": TextEntry("Fermer", "Close")
+        "diag.close": TextEntry("Fermer", "Close"),
+        "diag.developer": TextEntry("Mode développeur", "Developer Mode"),
+        "diag.reset": TextEntry("Réinitialiser toute la progression", "Reset All Progress"),
+        "diag.reset.title": TextEntry("Tout réinitialiser ?", "Reset everything?"),
+        "diag.reset.message": TextEntry("Les étoiles, les niveaux terminés et le terrarium seront effacés.",
+                                        "Stars, finished levels and the terrarium will be erased."),
+        "diag.reset.confirm": TextEntry("Réinitialiser", "Reset"),
+        "diag.reset.cancel": TextEntry("Annuler", "Cancel")
     ].merging(droppedFrameTexts) { first, _ in first }
 
     static let droppedFrameTexts: [String: TextEntry] = [

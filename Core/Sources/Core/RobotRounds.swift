@@ -13,6 +13,13 @@ public struct RobotC1Round: Equatable, Sendable {
         self.position = presentation.world.start
     }
 
+    /// The state a stop opens: one step taken, so the prediction choices show next to the grid.
+    public static func auditStop(seed: UInt64) -> RobotC1Round {
+        var round = RobotC1Round(presentation: RobotC1Presentation.make(seed: seed))
+        _ = round.step()
+        return round
+    }
+
     public var stars: Int { isComplete ? ProgressRecord.starsPerRound : 0 }
     public var playEnabled: Bool { prediction != nil && !isComplete }
 
