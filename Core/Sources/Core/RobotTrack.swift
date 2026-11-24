@@ -27,6 +27,7 @@ public enum TrackCatalog {
 public enum RobotLayout {
     public static let slotSide = 64.0
     public static let paletteSide = 64.0
+    public static let repeatDotSide = 60.0
 }
 
 /// Child-path text of the robot track: short imperatives, no speech, no failure words.
@@ -74,6 +75,7 @@ extension TextTable {
         "trail.level.robot-c1.title": TextEntry("Pas à pas", "Step by step"),
         "trail.level.robot-c2.title": TextEntry("Remplis les cases", "Fill the slots"),
         "trail.level.robot-c3.title": TextEntry("Trouve la fourmi", "Find the ant"),
+        "trail.level.robot-c4.title": TextEntry("Plus court, répète", "Say it shorter, repeat"),
         "robot.tap.step": TextEntry("Appuie ici", "Tap here"),
         "robot.choose.cell": TextEntry("Choisis la case", "Choose the cell"),
         "robot.look.robot": TextEntry("Regarde le robot", "Look at it"),
@@ -130,8 +132,9 @@ extension Curriculum {
     }
 
     static let robotLevels: [LevelDefinition] = [
-        robotLevel("C1", after: nil), robotLevel("C2", after: "robot-c1"), robotLevel("C3", after: "robot-c2")
+        robotLevel("C1", after: nil), robotLevel("C2", after: "robot-c1"), robotLevel("C3", after: "robot-c2"),
+        robotLevel("C4", after: "robot-c3")
     ]
 
-    static let robotTitleKeys = ["robot-c1", "robot-c2", "robot-c3"].map { "trail.level.\($0).title" }
+    static let robotTitleKeys = ["robot-c1", "robot-c2", "robot-c3", "robot-c4"].map { "trail.level.\($0).title" }
 }

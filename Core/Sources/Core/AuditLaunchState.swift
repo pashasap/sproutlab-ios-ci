@@ -18,6 +18,11 @@ public struct AuditLaunchState: Equatable, Sendable {
     /// The seeded record: the stop's level (or the resident collection) is unlocked.
     public let record: ProgressRecord
 
+    /// The repeat dots, shown only on the robot-c4 stop.
+    public var repeatControls: RepeatControlsPresentation? {
+        levelId == "robot-c4" ? RepeatControlsPresentation.standard : nil
+    }
+
     public init(launch: AuditLaunch) {
         stopId = launch.stopId
         rootId = launch.root

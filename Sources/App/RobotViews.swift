@@ -193,6 +193,66 @@ struct RobotC3View: View {
     }
 }
 
+struct RobotC4View: View {
+    let language: Language
+    let onDone: () -> Void
+    @State private var round: RobotC4Round
+    @State private var dots: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(seed: UInt64, language: Language, onDone: @escaping () -> Void) {
+        let presentation = RobotC4Presentation.make(round: Int(seed % 4) + 1, seed: seed)
+        _round = State(initialValue: RobotC4Round(presentation: presentation))
+        _dots = State(initialValue: presentation.block.count)
+        self.language = language
+        self.onDone = onDone
+    }
+
+    private var presentation: RobotC4Presentation { round.presentation }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            RobotGridView(world: presentation.world, robot: presentation.world.start)
+                .accessibilityIgnoresInvertColors()
+            HStack {
+                ForEach(Array(presentation.plainBefore.enumerated()), id: \.offset) { _, move in
+                    RobotArrowCard(symbol: RobotText.arrow(move), side: RobotLayout.slotSide)
+                }
+                HStack { ForEach(Array(presentation.block.events.enumerated()), id: \.offset) { _, move in
+                    RobotArrowCard(symbol: RobotText.arrow(move), side: RobotLayout.slotSide)
+                } }
+                .padding(4)
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.accent, lineWidth: 3))
+            }
+            .accessibilityIgnoresInvertColors()
+            repeatDots
+            RobotPredictionRow(choices: round.predictionChoices, language: language) {
+                round.submit($0)
+                if round.isComplete { onDone() }
+            }
+            if !presentation.isPredictRound {
+                RobotIconButton(symbol: RobotText.playSymbol, label: TextTable.string("robot.play", language),
+                                side: RobotLayout.slotSide) { round.play(); if round.isComplete { onDone() } }
+            }
+        }
+        .animation(reduceMotion ? nil : .default, value: dots)
+    }
+
+    private var repeatDots: some View {
+        let controls = RepeatControlsPresentation.standard
+        return HStack {
+            ForEach(controls.dotCounts, id: \.self) { count in
+                Button { dots = count } label: {
+                    Text(verbatim: String(count))
+                        .frame(minWidth: controls.minDotSide, minHeight: controls.minDotSide)
+                        .background(count == dots ? Palette.accent.opacity(0.3) : Palette.card, in: Circle())
+                }
+                .accessibilityLabel(controls.accessibleName(count: count, language))
+            }
+        }
+    }
+}
+
 struct RobotRoundView: View {
     let round: RoundViewModel
     let language: Language
@@ -204,6 +264,7 @@ struct RobotRoundView: View {
             switch round.robotKind {
             case "robot.C1": RobotC1View(seed: seed, language: language) { round.finishRobotQuestion() }
             case "robot.C2": RobotC2View(seed: seed, language: language) { round.finishRobotQuestion() }
+            case "robot.C4": RobotC4View(seed: seed, language: language) { round.finishRobotQuestion() }
             default: RobotC3View(seed: seed, language: language) { round.finishRobotQuestion() }
             }
         }

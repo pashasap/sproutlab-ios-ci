@@ -5,6 +5,8 @@ public struct KitSlotBoard: KitComponent {
         let token: String
         let paletteIndex: Int
         let placed: Bool
+        /// A reusable token stays in the palette, so undo has nothing to put back.
+        var reusable = false
     }
 
     public private(set) var slots: [String?]
@@ -42,6 +44,15 @@ public struct KitSlotBoard: KitComponent {
         announcements.append(KitAnnouncement(key: complete ? "kit.say.complete" : "kit.say.placed", subject: token))
     }
 
+    /// Fills a slot with a palette token without using the token up, so a program can repeat a card.
+    public mutating func placeReusable(_ token: String, at slot: Int) {
+        guard slots.indices.contains(slot), slots[slot] == nil, palette.contains(token) else { return }
+        slots[slot] = token
+        selectedToken = nil
+        history.append(Step(slot: slot, token: token, paletteIndex: 0, placed: true, reusable: true))
+        announcements.append(KitAnnouncement(key: complete ? "kit.say.complete" : "kit.say.placed", subject: token))
+    }
+
     public mutating func tapFilled(_ slot: Int) {
         guard slots.indices.contains(slot), let token = slots[slot] else { return }
         slots[slot] = nil
@@ -54,7 +65,7 @@ public struct KitSlotBoard: KitComponent {
         guard let step = history.popLast() else { return }
         if step.placed {
             slots[step.slot] = nil
-            palette.insert(step.token, at: min(step.paletteIndex, palette.count))
+            if !step.reusable { palette.insert(step.token, at: min(step.paletteIndex, palette.count)) }
         } else {
             palette.removeAll { $0 == step.token }
             slots[step.slot] = step.token

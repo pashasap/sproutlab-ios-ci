@@ -27,6 +27,7 @@ let auditStops: [(id: String, root: String)] = [
     (id: "robot-c1", root: "sproutlab.audit.robot-c1"),
     (id: "robot-c2", root: "sproutlab.audit.robot-c2"),
     (id: "robot-c3", root: "sproutlab.audit.robot-c3"),
+    (id: "robot-c4", root: "sproutlab.audit.robot-c4"),
 ]
 
 extension AuditStopsUITests {
@@ -58,4 +59,5 @@ extension AuditStopsUITests {
     @MainActor func test_026_robot_c1() { visit("robot-c1", root: "sproutlab.audit.robot-c1") }
     @MainActor func test_027_robot_c2() { visit("robot-c2", root: "sproutlab.audit.robot-c2") }
     @MainActor func test_028_robot_c3() { visit("robot-c3", root: "sproutlab.audit.robot-c3") }
+    @MainActor func test_029_robot_c4() { visit("robot-c4", root: "sproutlab.audit.robot-c4") }
 }

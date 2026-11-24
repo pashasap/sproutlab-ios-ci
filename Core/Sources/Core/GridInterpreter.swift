@@ -23,7 +23,7 @@ public struct GridInterpreter: Sendable {
         position = world.start
     }
 
-    public var program: [GridMove] { strip.cards }
+    public var program: [GridMove] { strip.expanded() }
     public var playhead: Int { strip.playhead }
 
     public static func apply(_ move: GridMove, at position: GridPoint, in world: GridWorld) -> (GridPoint, GridEvent) {
