@@ -124,7 +124,8 @@ extension ChromeCatalog {
     public static var journalSymbolName: String { TextTable.string("icon.journal", .en) }
 
     /// Terrarium-only symbols outside the chrome list: the welcome hand (a real SF Symbols 2 name).
-    public static let terrariumSymbolNames = ["hand.raised.fill"]
+    /// Also holds the robot-c4 repeat block symbol (`icon.repeat`), which the chrome list does not use.
+    public static let terrariumSymbolNames = ["hand.raised.fill", "repeat"]
 
     /// Every SF Symbol name the views may draw; the single list.
     public static var allSymbolNames: [String] {

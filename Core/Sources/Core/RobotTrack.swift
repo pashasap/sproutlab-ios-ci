@@ -75,7 +75,7 @@ extension TextTable {
         "trail.level.robot-c1.title": TextEntry("Pas à pas", "Step by step"),
         "trail.level.robot-c2.title": TextEntry("Remplis les cases", "Fill the slots"),
         "trail.level.robot-c3.title": TextEntry("Trouve la fourmi", "Find the ant"),
-        "trail.level.robot-c4.title": TextEntry("Plus court, répète", "Say it shorter, repeat"),
+        "trail.level.robot-c4.title": TextEntry("Plus court, répète", "Repeat it shorter"),
         "robot.tap.step": TextEntry("Appuie ici", "Tap here"),
         "robot.choose.cell": TextEntry("Choisis la case", "Choose the cell"),
         "robot.look.robot": TextEntry("Regarde le robot", "Look at it"),

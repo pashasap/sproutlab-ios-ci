@@ -197,34 +197,54 @@ struct RobotC4View: View {
     let language: Language
     let onDone: () -> Void
     @State private var round: RobotC4Round
-    @State private var dots: Int
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(seed: UInt64, language: Language, onDone: @escaping () -> Void) {
         let presentation = RobotC4Presentation.make(round: Int(seed % 4) + 1, seed: seed)
         _round = State(initialValue: RobotC4Round(presentation: presentation))
-        _dots = State(initialValue: presentation.block.count)
         self.language = language
         self.onDone = onDone
     }
 
     private var presentation: RobotC4Presentation { round.presentation }
 
+    private func arrows(_ moves: [GridMove], side: Double) -> some View {
+        ForEach(Array(moves.enumerated()), id: \.offset) { _, move in
+            RobotArrowCard(symbol: RobotText.arrow(move), side: side)
+        }
+    }
+
+    /// Plain arrow cards, then the boxed repeat block wrapping its arrows with the xN badge.
+    private var programStrip: some View {
+        let block = presentation.repeatBlock
+        return HStack(spacing: 8) {
+            arrows(presentation.plainBefore, side: RobotLayout.slotSide)
+            HStack(spacing: 4) {
+                Image(systemName: TextTable.string(block.iconId, .en))
+                arrows(block.arrows, side: RobotLayout.slotSide)
+                Text(verbatim: block.badge).font(.title3.bold())
+            }
+            .padding(6)
+            .background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.accent, lineWidth: 3))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(TextTable.string(block.iconId + ".label", language) + " " + block.badge)
+        }
+        .accessibilityIgnoresInvertColors()
+    }
+
+    private var expandedPreview: some View {
+        HStack(spacing: 2) { arrows(RobotC4PairView(presentation: presentation).expandedProgram, side: 24) }
+            .accessibilityHidden(true)
+            .accessibilityIgnoresInvertColors()
+    }
+
     var body: some View {
         VStack(spacing: 16) {
-            RobotGridView(world: presentation.world, robot: presentation.world.start)
+            RobotGridView(world: presentation.world, robot: round.robotPosition)
                 .accessibilityIgnoresInvertColors()
-            HStack {
-                ForEach(Array(presentation.plainBefore.enumerated()), id: \.offset) { _, move in
-                    RobotArrowCard(symbol: RobotText.arrow(move), side: RobotLayout.slotSide)
-                }
-                HStack { ForEach(Array(presentation.block.events.enumerated()), id: \.offset) { _, move in
-                    RobotArrowCard(symbol: RobotText.arrow(move), side: RobotLayout.slotSide)
-                } }
-                .padding(4)
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.accent, lineWidth: 3))
-            }
-            .accessibilityIgnoresInvertColors()
+            programStrip
+            expandedPreview
             repeatDots
             RobotPredictionRow(choices: round.predictionChoices, language: language) {
                 round.submit($0)
@@ -235,17 +255,17 @@ struct RobotC4View: View {
                                 side: RobotLayout.slotSide) { round.play(); if round.isComplete { onDone() } }
             }
         }
-        .animation(reduceMotion ? nil : .default, value: dots)
+        .animation(reduceMotion ? nil : .default, value: round.robotPosition)
     }
 
     private var repeatDots: some View {
         let controls = RepeatControlsPresentation.standard
         return HStack {
             ForEach(controls.dotCounts, id: \.self) { count in
-                Button { dots = count } label: {
+                Button { round.setRepeatCount(count) } label: {
                     Text(verbatim: String(count))
                         .frame(minWidth: controls.minDotSide, minHeight: controls.minDotSide)
-                        .background(count == dots ? Palette.accent.opacity(0.3) : Palette.card, in: Circle())
+                        .background(count == round.repeatCount ? Palette.accent.opacity(0.3) : Palette.card, in: Circle())
                 }
                 .accessibilityLabel(controls.accessibleName(count: count, language))
             }

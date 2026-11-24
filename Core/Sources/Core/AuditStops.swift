@@ -42,6 +42,6 @@ public enum AuditStops {
         AuditStop(id: "robot-c1", root: "sproutlab.audit.robot-c1", title: "Little Robot C1", expectation: "The C1 grid shows the robot, a row of arrow cards and a step control, with a prediction choice after a step.", flows: ["F-19"], defects: []),
         AuditStop(id: "robot-c2", root: "sproutlab.audit.robot-c2", title: "Little Robot C2", expectation: "The C2 grid shows rocks, empty slots and a palette of four arrow buttons that are each at least 56 points.", flows: ["F-20"], defects: []),
         AuditStop(id: "robot-c3", root: "sproutlab.audit.robot-c3", title: "Little Robot C3", expectation: "The C3 grid shows a short arrow program with a swap palette and a play control.", flows: ["F-21"], defects: []),
-        AuditStop(id: "robot-c4", root: "sproutlab.audit.robot-c4", title: "Little Robot C4", expectation: "The C4 grid shows a short arrow program with a repeat block and a play control.", flows: ["F-21"], defects: []),
+        AuditStop(id: "robot-c4", root: "sproutlab.audit.robot-c4", title: "Little Robot C4", expectation: "The C4 screen shows the grid, a visible arrow program strip with a repeat block xN wrapping arrows, the 2...5 repeat-count controls and the play control.", flows: ["F-21"], defects: []),
     ]
 }

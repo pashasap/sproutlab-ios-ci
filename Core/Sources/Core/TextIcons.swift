@@ -52,6 +52,7 @@ extension TextTable {
                        labelEN: "French reading"),
         IconDefinition(key: "icon.readingEN", symbol: "book.fill", labelFR: "Lecture en anglais",
                        labelEN: "English reading"),
+        IconDefinition(key: "icon.repeat", symbol: "repeat", labelFR: "Répète", labelEN: "Repeat"),
         IconDefinition(key: "icon.robot", symbol: "leaf.fill", labelFR: "Petit Robot", labelEN: "Little Robot")
     ]
 }

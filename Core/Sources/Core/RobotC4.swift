@@ -1,5 +1,12 @@
 import Foundation
 
+/// What the C4 strip draws for the repeat block.
+public struct RobotC4RepeatBlockView: Equatable, Sendable {
+    public let arrows: [GridMove]
+    public let iconId: String
+    public let badge: String
+}
+
 /// C4: a repeat block replaces a run of identical arrows. Rounds 1...4; round 4 asks for the end cell.
 public struct RobotC4Presentation: Sendable {
     public static let slotCount = 10
@@ -19,6 +26,24 @@ public struct RobotC4Presentation: Sendable {
     }
 
     public var expandedProgram: [GridMove] { plainBefore + block.expanded }
+
+    /// The repeat block as the screen draws it: wrapped arrows, a registered icon and the xN badge.
+    public var repeatBlock: RobotC4RepeatBlockView {
+        RobotC4RepeatBlockView(arrows: block.events, iconId: "icon.repeat", badge: "x\(block.count)")
+    }
+
+    /// The same round with the repeat count changed (clamped to 2...5).
+    func withRepeatCount(_ count: Int) -> RobotC4Presentation {
+        var copy = block
+        copy.count = count
+        let open = GridWorld(width: world.width, height: world.height, start: world.start, goal: world.start)
+        let goal = RobotC4Route.cells(open, plainBefore + copy.expanded).last ?? world.start
+        var moved = GridWorld(width: world.width, height: world.height, start: world.start, goal: goal)
+        for rock in world.rocks {
+            moved.addRock(GridPoint(rock.x + goal.x - world.goal.x, rock.y + goal.y - world.goal.y))
+        }
+        return RobotC4Presentation(round: round, world: moved, block: copy, plainBefore: plainBefore)
+    }
 
     public var endCell: GridPoint { RobotC4Route.cells(world, expandedProgram).last ?? world.start }
 
@@ -105,13 +130,13 @@ public struct RobotC4PairView: Sendable {
         expandedStrip = long
         loopedStrip = presentation.looped
         expandedProgram = presentation.expandedProgram
-        var longRun = GridInterpreter(world: world, strip: long)
-        longRun.play()
+        // The slot board holds at most five cards, so the long trace is simulated from the move list.
+        let longTrace = GridInterpreter.simulate(world: world, program: presentation.expandedProgram)
         var shortRun = GridInterpreter(world: world, strip: presentation.looped)
         shortRun.play()
-        expandedTrace = longRun.trace
+        expandedTrace = longTrace
         loopedTrace = shortRun.trace
-        expandedPath = Self.path(world, longRun.trace)
+        expandedPath = Self.path(world, longTrace)
         loopedPath = Self.path(world, shortRun.trace)
     }
 
@@ -154,11 +179,45 @@ public enum RobotC4Help {
 
 /// One C4 round: no fail state, no star loss; a wrong cell only offers the next hint.
 public struct RobotC4Round: Sendable {
-    public let presentation: RobotC4Presentation
+    public private(set) var presentation: RobotC4Presentation
     public private(set) var isComplete = false
     public private(set) var hintLevel = 0
+    public private(set) var repeatCount: Int
+    public private(set) var trace: [GridEvent]
+    public private(set) var robotPosition: GridPoint
+    private var stepIndex = 0
 
-    public init(presentation: RobotC4Presentation) { self.presentation = presentation }
+    public init(presentation: RobotC4Presentation) {
+        self.presentation = presentation
+        repeatCount = presentation.block.count
+        trace = Self.trace(of: presentation)
+        robotPosition = presentation.world.start
+    }
+
+    private static func trace(of presentation: RobotC4Presentation) -> [GridEvent] {
+        var run = GridInterpreter(world: presentation.world, strip: presentation.looped)
+        run.play()
+        return run.trace
+    }
+
+    /// Clamp to 2...5, rebuild the programs and the trace, and put the robot back on the start cell.
+    public mutating func setRepeatCount(_ count: Int) {
+        presentation = presentation.withRepeatCount(count)
+        repeatCount = presentation.block.count
+        trace = Self.trace(of: presentation)
+        stepIndex = 0
+        robotPosition = presentation.world.start
+    }
+
+    /// Move the robot one trace event along.
+    public mutating func step() {
+        guard stepIndex < trace.count else { return }
+        switch trace[stepIndex] {
+        case .moved(let cell), .collected(let cell): robotPosition = cell
+        case .blocked, .finished: break
+        }
+        stepIndex += 1
+    }
 
     public var stars: Int { isComplete ? ProgressRecord.starsPerRound : 0 }
     public var hasFailed: Bool { false }
@@ -181,6 +240,7 @@ public struct RobotC4Round: Sendable {
 
     public mutating func play() {
         guard !presentation.isPredictRound else { return }
+        while stepIndex < trace.count { step() }
         isComplete = true
     }
 
