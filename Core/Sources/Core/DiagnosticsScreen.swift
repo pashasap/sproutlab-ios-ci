@@ -20,6 +20,8 @@ public struct DiagnosticsDeveloperRow: Equatable, Sendable {
     public let valueText: String
     public let accessibilityId: String
     public let minHeight: Double
+    public var symbolName: String { isOn ? "checkmark" : "circle" }
+    let isOn: Bool
 }
 
 /// What the diagnostics view draws at the audit stop: static measurements and the gallery button.
@@ -32,7 +34,7 @@ public struct DiagnosticsScreen: Equatable, Sendable {
             label: TextTable.string("diag.developer", language),
             valueText: TextTable.string(isOn ? "diag.developer.on" : "diag.developer.off", language),
             accessibilityId: "diag.developer",
-            minHeight: 44)
+            minHeight: 56, isOn: isOn)
     }
 
     public let rows: [DiagnosticsRow] = [

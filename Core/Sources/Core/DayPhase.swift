@@ -36,6 +36,15 @@ public enum SunMoonDial {
         return all[min(Int(turn / 90), all.count - 1)]
     }
 
+    /// The current phase of the two-phase dial, named for VoiceOver.
+    public static func accessibilityValue(_ phase: DayPhase, _ language: Language) -> String {
+        let night = phase == .night || phase == .dusk
+        switch language {
+        case .fr: return night ? "Nuit" : "Jour"
+        case .en: return night ? "Night" : "Day"
+        }
+    }
+
     public static func accessibilityLabel(_ language: Language) -> String {
         switch language {
         case .fr: return "Cadran du soleil et de la lune : choisir le moment de la journée"

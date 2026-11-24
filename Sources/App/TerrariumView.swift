@@ -8,7 +8,7 @@ struct TerrariumView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
-    @State private var phase = DayPhase.current(clock: SystemClock(), calendar: .current)
+    private var phase: DayPhase { model.dialPhase }
     @State private var visible = true
     @State private var start = Date()
     @State private var showJournal = false
@@ -48,9 +48,6 @@ struct TerrariumView: View {
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
                 .clipped()
         }
-        .gesture(DragGesture(minimumDistance: 40).onEnded { drag in
-            if drag.translation.width < 0 { model.panRight() } else { model.panLeft() }
-        })
         .accessibilityIdentifier(model.accessibilityId)
     }
 
@@ -97,7 +94,9 @@ struct TerrariumView: View {
     private func gardenStack(_ frame: TerrariumFrame, _ proxy: GeometryProxy) -> some View {
         ZStack(alignment: .topLeading) {
             TerrariumSkyView(frame: frame, scheme: scheme)
+                .accessibilityIgnoresInvertColors()
             backdrop(proxy.size)
+                .accessibilityIgnoresInvertColors()
             ForEach(model.scene.layers, id: \.id) { layer in
                 layerView(layer, frame, size: proxy.size)
                     .offset(x: -model.panOffset * layer.parallax)
@@ -116,11 +115,8 @@ struct TerrariumView: View {
                 .position(centre(frames.close))
             controlButton(model.journalControl) { showJournal = true }
                 .position(centre(frames.journal))
-            controlButton(model.panLeftControl) { model.panLeft() }
-                .position(centre(frames.panLeft))
-            controlButton(model.panRightControl) { model.panRight() }
-                .position(centre(frames.panRight))
-            TerrariumDialView(frame: frame, scheme: scheme, language: model.language) { phase = $0 }
+            TerrariumDialView(frame: frame, scheme: scheme, language: model.language,
+                              value: model.dialAccessibilityValue, animates: !reduceMotion) { model.toggleDial() }
                 .position(centre(frames.dial))
         }
     }
@@ -146,6 +142,9 @@ private struct ResidentView: View {
     let animates: Bool
     @State private var tilt = false
 
+    /// The day or night pose of an arrived resident, from Core.
+    private var kind: ResidentPoseKind? { model.residentPose(resident.id) }
+
     var body: some View {
         let area = resident.tapArea
         VStack(spacing: 4) {
@@ -153,6 +152,8 @@ private struct ResidentView: View {
             Button { model.tap(resident.id) } label: {
                 creature
                     .saturation(resident.isSilhouette ? 0 : 1)
+                    .brightness(kind == .resting ? -0.15 : 0)
+                    .background(Circle().fill(Palette.accent.opacity(kind == .glowing ? 0.35 : 0)))
                     .rotationEffect(.degrees(angle + pose.rotation))
                     .scaleEffect(pose.scale)
                     .offset(x: pose.offset.x, y: pose.offset.y)
@@ -168,6 +169,7 @@ private struct ResidentView: View {
         }
         .frame(width: area.width, height: area.height)
         .position(centre)
+        .accessibilityIgnoresInvertColors()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(resident.accessibilityId)
         .onAppear { if animates, !model.reduceMotion, resident.wobble == .animated { withAnimation(.easeInOut(duration: wobbleSeconds).repeatForever()) { tilt = true } } }

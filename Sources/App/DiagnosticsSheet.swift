@@ -65,16 +65,26 @@ struct DiagnosticsSheet: View {
                 }
             }
         }
+        .frame(maxHeight: .infinity)
     }
 
     @ViewBuilder private var developerControls: some View {
         let row = DiagnosticsScreen.developerRow(isOn: app.developerMode, language: language)
-        HStack {
-            Text(row.label)
-            Spacer()
-            Toggle(row.label, isOn: Binding(get: { app.developerMode }, set: { app.setDeveloperMode($0) }))
-                .labelsHidden()
+        Button { app.setDeveloperMode(!app.developerMode) } label: {
+            HStack {
+                Text(row.label)
+                Spacer()
+                HStack(spacing: 4) {
+                    Image(systemName: row.symbolName)
+                    Text(verbatim: row.valueText)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Palette.ink.opacity(0.12)))
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .frame(minHeight: row.minHeight)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(row.label)

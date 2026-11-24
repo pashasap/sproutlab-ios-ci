@@ -9,10 +9,8 @@ public final class TerrariumViewModel {
     public let scene = GardenScene.garden
     public let habitats: [TerrariumHabitat]
     public let accessibilityId = "sproutlab.terrarium"
-    public let panLeftControl = TerrariumControl(accessibilityId: "sproutlab.pan.left",
-                                                 iconKey: "icon.pan.left", labelKey: "icon.pan.left.label", side: 56)
-    public let panRightControl = TerrariumControl(accessibilityId: "sproutlab.pan.right",
-                                                  iconKey: "icon.pan.right", labelKey: "icon.pan.right.label", side: 56)
+    /// The two-phase dial: day or night; a tap toggles.
+    public private(set) var dialPhase: DayPhase = .day
     public let backControl = TerrariumControl(accessibilityId: "sproutlab.terrarium.back",
                                               iconKey: "icon.back", labelKey: "icon.back.label", side: 56)
     /// The sheet's close control: the back glyph with the close label.
@@ -55,6 +53,20 @@ public final class TerrariumViewModel {
 
     public func panRight() { panOffset = min(panOffset + panStep, scene.maxPanOffset) }
     public func panLeft() { panOffset = max(panOffset - panStep, 0) }
+
+    // MARK: dial and poses
+
+    public func toggleDial() { dialPhase = dialPhase == .day ? .night : .day }
+
+    public var dialAccessibilityValue: String { SunMoonDial.accessibilityValue(dialPhase, language) }
+
+    /// A met or ready-arrived resident's pose for a phase; nil while not arrived.
+    public func residentPose(_ id: String, phase: DayPhase) -> ResidentPoseKind? {
+        guard collection.state(of: id) != .notArrived else { return nil }
+        return ResidentPoseKind.pose(id, phase)
+    }
+
+    public func residentPose(_ id: String) -> ResidentPoseKind? { residentPose(id, phase: dialPhase) }
 
     // MARK: residents
 

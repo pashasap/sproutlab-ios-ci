@@ -36,7 +36,7 @@ public struct GardenScene: Equatable, Sendable {
     public var maxPanOffset: Double { max(0, width - screenWidth) }
 
     public static let garden = GardenScene(
-        width: 1000, height: 800, screenWidth: 400,
+        width: 1000, height: 800, screenWidth: 1000,
         layers: [
             GardenLayer(id: "sky", parallax: 0.1, elementIds: ["sun", "clouds"]),
             GardenLayer(id: "farHills", parallax: 0.3, elementIds: ["hills"]),
