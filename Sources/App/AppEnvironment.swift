@@ -81,6 +81,12 @@ struct AppDiagnostics: DiagnosticsSource, @unchecked Sendable {
     var audioEngine: AudioEngineState { environment.music.engineState }
     var frenchVoiceName: String? { environment.audit != nil ? nil : environment.speech.voiceName(tag: "fr-FR") }
     var englishVoiceName: String? { environment.audit != nil ? nil : environment.speech.voiceName(tag: "en-US") }
+    var activeVoiceChoice: VoiceChoice? {
+        guard environment.audit == nil else { return nil }
+        return MainActor.assumeIsolated {
+            environment.speech.voiceChoice(tag: environment.app.language == .fr ? "fr-FR" : "en-US")
+        }
+    }
 
     private static func bundleValue(_ key: String) -> String {
         Bundle.main.object(forInfoDictionaryKey: key) as? String ?? "-"

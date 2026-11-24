@@ -44,11 +44,18 @@ extension Item {
 
     /// What the ear button speaks: the question, then the stimulus in words.
     public func speechLine(_ language: Language) -> String {
-        let prompt = TextTable.string(promptKey, language)
-        guard !isNotice else { return prompt }
+        guard !isNotice else { return TextTable.string(promptKey, language) }
         let speechKey = promptKey.replacingOccurrences(of: ".prompt.", with: ".speech.")
-        let line = prompt + " " + TextTable.string(speechKey, language)
-        return detail == .plain ? line : line + " " + textEquivalent(language)
+        var line = TextTable.string(speechKey, language)
+        if readingId != nil, detail != .plain { line += " " + textEquivalent(language) }
+        if let spoken = SpokenMath.operation(detail, language) ?? SpokenMath.track(detail, language) {
+            line += " " + spoken
+        }
+        // Put in order: Tap to Hear says the target word, so the child has something to listen to.
+        if let id = readingId, let bank = ReadingBank.item(id: id), bank.activity == .sequenceSounds, bank.rung == .r1 {
+            line += " " + bank.speechItem.text
+        }
+        return line
     }
 }
 
@@ -99,6 +106,10 @@ public struct ReadingItemPresentation: Sendable, Equatable {
     public var promptText: String = ""
     public var slotLabels: [String] = []
     public var digraphTiles: [String] = []
+    /// The full prompt of the item, never shortened; wraps over several lines in the view.
+    public var instruction: String = ""
+    /// What the child can do on the kit, in one full sentence.
+    public var actionHint: String = ""
 }
 
 extension ReadingItemPresentation {
@@ -108,6 +119,21 @@ extension ReadingItemPresentation {
         guard bank.r3Activity == .repairSplit, let grapheme = bank.grapheme else { return word }
         let spaced = grapheme.map { String($0) }.joined(separator: " ")
         return word.replacingOccurrences(of: grapheme, with: spaced)
+    }
+
+    mutating func fillPrompt(of item: Item, _ language: Language) {
+        instruction = TextTable.string(item.promptKey, language)
+        actionHint = TextTable.string(Self.hintKey(kit: ReadingKitSession.make(for: item)), language)
+    }
+
+    static func hintKey(kit: ReadingKitSession?) -> String {
+        switch kit?.state {
+        case .sorting?: return "kit.hint.sorting"
+        case .ordering?: return "kit.hint.ordering"
+        case .board?: return "kit.hint.board"
+        case .reveal?: return "kit.hint.reveal"
+        default: return "kit.hint.tiles"
+        }
     }
 
     static func slotLabels(count: Int, _ language: Language) -> [String] {
@@ -162,6 +188,7 @@ extension Item {
                                              slotCount: slotCount, boardTiles: boardTiles)
         result.stimulusWord = ReadingItemPresentation.stimulus(bank)
         result.slotLabels = ReadingItemPresentation.slotLabels(count: slotCount, language)
+        result.fillPrompt(of: self, language)
         if bank.r3Activity == .selectDigraph || bank.r3Activity == .repairSplit {
             result.digraphTiles = (bank.grapheme ?? "").map { String($0) }
         }

@@ -1,6 +1,11 @@
 import AVFoundation
 import Core
 
+/// The music preference as the plan reads it; AppViewModel persists it in the progress record.
+private final class MusicFlag: MusicPreferenceStore {
+    var isMusicOn = false
+}
+
 /// The audio adapter: an ambient session, one mixer per bus, and the lifecycle feed into AudioRecoveryPlan.
 /// Used only from the main thread.
 final class MusicPlayer: AudioService, @unchecked Sendable {
@@ -14,7 +19,12 @@ final class MusicPlayer: AudioService, @unchecked Sendable {
     private var effectNodes: [AudioBus: AVAudioPlayerNode] = [:]
     private var prepared = false
     private var failed = false
-    private var musicOn = false
+    private var musicOn: Bool {
+        get { flag.isMusicOn }
+        set { flag.isMusicOn = newValue }
+    }
+    private let flag = MusicFlag()
+    private lazy var plan = AudioRecoveryPlan(preferences: flag)
     private var userHasActed = false
     private var musicWasPlaying = false
     private var level: Float = 1.0
@@ -34,7 +44,8 @@ final class MusicPlayer: AudioService, @unchecked Sendable {
 
     func setMusic(on: Bool) {
         musicOn = on
-        if on { userHasActed = true; startMusic() } else { pauseMusic() }
+        if on { userHasActed = true }
+        handle(.toggleChanged(on))
     }
 
     func setMusicLevel(_ newLevel: Float) {
@@ -50,6 +61,7 @@ final class MusicPlayer: AudioService, @unchecked Sendable {
     func speechDidEnd() {
         mixer.speechDidEnd()
         applyMusicGain()
+        handle(.speechEnded)
     }
 
     func playChime() { play(MotifTable.celebration, on: .effects) }
@@ -65,7 +77,7 @@ final class MusicPlayer: AudioService, @unchecked Sendable {
 
     /// Feeds a scene-phase change into the recovery rules.
     func scenePhaseChanged(background: Bool) {
-        handle(background ? .enteredBackground : .becameActive)
+        handle(background ? .sceneBackgrounded : .sceneBecameActive)
     }
 
     // MARK: lifecycle
@@ -100,28 +112,32 @@ final class MusicPlayer: AudioService, @unchecked Sendable {
     private func routeChange(_ note: Notification) {
         let raw = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
         switch raw.flatMap(AVAudioSession.RouteChangeReason.init(rawValue:)) {
-        case .oldDeviceUnavailable: handle(.routeChanged(reason: .oldDeviceUnavailable))
-        case .newDeviceAvailable: handle(.routeChanged(reason: .newDeviceAvailable))
+        case .oldDeviceUnavailable, .newDeviceAvailable: handle(.screenChanged)
         default: break
         }
     }
 
-    private func handle(_ event: AudioLifecycleEvent) {
-        let policy = AudioPolicyState(musicOn: musicOn, userHasActed: userHasActed,
-                                      musicWasPlaying: musicWasPlaying)
-        for command in AudioRecoveryPlan.next(state: policy, event: event) {
-            run(command)
+    /// Feeds one event to the recovery plan and executes the command it returns.
+    /// The plan reads the persisted flag and the true playing state; this only executes.
+    private func handle(_ event: AudioRecoveryEvent) {
+        let playing = engine.isRunning && musicNode.isPlaying
+        let command = plan.handle(event, isPlaying: playing)
+        guard userHasActed || event == .toggleChanged(true) else { return }
+        switch command {
+        case .startMusic:
+            if !playing { engine.stop() }
+            startMusic()
+        case .stopMusic:
+            pauseMusic()
+        case .none:
+            break
         }
+        musicWasPlaying = engine.isRunning && musicNode.isPlaying
     }
 
-    private func run(_ command: AudioCommand) {
-        switch command {
-        case .pauseMusic: musicNode.pause()
-        case .resumeMusic: startMusic()
-        case .restartEngine: engine.stop(); _ = ensureRunning()
-        case .noop: break
-        }
-    }
+    /// App-level triggers the plan also reacts to.
+    func roundChanged() { handle(.roundChanged) }
+    func screenChanged() { handle(.screenChanged) }
 
     // MARK: engine
 

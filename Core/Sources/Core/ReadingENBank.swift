@@ -57,8 +57,8 @@ public enum ReadingENBank {
     private static let changePairs = [("cat", "cot"), ("hat", "hit"), ("pig", "peg"), ("pin", "pen"),
                                       ("bed", "bad"), ("net", "nut"), ("dog", "dig"), ("log", "leg"),
                                       ("sun", "fun"), ("bus", "bug"), ("cup", "cap"), ("hen", "ten")]
-    private static let buildWords = ["map", "red", "sit", "hot", "run", "bag", "leg", "big", "mop", "mud",
-                                     "jam", "pen"]
+    /// Every build round shows a picture of its word, so it never relies on audio alone.
+    private static let buildWords = revealWords
 
     private static func tiles(for word: String) -> [String] {
         let spare = ["x", "z", "q", "v"].first { !word.contains($0) } ?? "x"
@@ -76,7 +76,7 @@ public enum ReadingENBank {
         }
         let builds = buildWords.map {
             ReadingENItem(id: "en2-build-" + $0, rung: .en2, activity: .buildTiles)
-                .spelling([$0], tiles: tiles(for: $0))
+                .spelling([$0], tiles: tiles(for: $0)).pictured("en-" + $0)
         }
         return reveals + changes + builds
     }()

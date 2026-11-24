@@ -9,6 +9,11 @@ public struct ReadingKitPresentation: Equatable, Sendable {
     public let pictureKey: String?
 }
 
+/// A request to speak one tile's sound or text.
+public struct KitSpeechCommand: Equatable, Sendable {
+    public let text: String
+}
+
 /// What Core decides after a kit command: nothing yet, a correct answer, or a wrong one.
 enum KitVerdict: Equatable {
     case pending, correct, wrong
@@ -26,6 +31,8 @@ struct ReadingKitSession {
 
     let item: ReadingBankItem
     private(set) var state: State
+    /// One command per tile tap (`.select`): the view speaks the tile's sound.
+    private(set) var speechCommands: [KitSpeechCommand] = []
 
     /// The session of a bank item; nil for a tap-only item.
     init?(item: ReadingBankItem) {
@@ -105,6 +112,7 @@ struct ReadingKitSession {
 
     /// Applies one command (taps and accessibility actions both come here) and judges the new state.
     mutating func apply(_ command: KitCommand) -> KitVerdict {
+        if case .select(let token) = command { speechCommands.append(KitSpeechCommand(text: token)) }
         switch state {
         case .board(var part):
             let before = part

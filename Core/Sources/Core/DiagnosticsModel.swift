@@ -15,6 +15,11 @@ public protocol DiagnosticsSource: Sendable {
     var audioEngine: AudioEngineState { get }
     var frenchVoiceName: String? { get }
     var englishVoiceName: String? { get }
+    var activeVoiceChoice: VoiceChoice? { get }
+}
+
+extension DiagnosticsSource {
+    public var activeVoiceChoice: VoiceChoice? { nil }
 }
 
 /// The lowest iOS / iPadOS version the app supports (the manifests carry the same floor).
@@ -110,6 +115,19 @@ public struct DiagnosticsModel {
         }
     }
 
-    public var frenchVoiceText: String { source.frenchVoiceName ?? "Not available" }
-    public var englishVoiceText: String { source.englishVoiceName ?? "Not available" }
+    public var frenchVoiceText: String { source.frenchVoiceName ?? Self.missingVoiceText }
+    public var englishVoiceText: String { source.englishVoiceName ?? Self.missingVoiceText }
+
+    static let voiceHintPath = "Settings > Accessibility > Spoken Content > Voices"
+    private static let missingVoiceText = "Not available. Download one in \(voiceHintPath)"
+
+    public var voiceRowText: String {
+        guard let choice = source.activeVoiceChoice else { return "Not available" }
+        return "\(choice.name) (\(choice.tier.label))"
+    }
+
+    public var voiceHintText: String? {
+        guard source.activeVoiceChoice?.needsBetterVoiceHint == true else { return nil }
+        return Self.voiceHintPath
+    }
 }

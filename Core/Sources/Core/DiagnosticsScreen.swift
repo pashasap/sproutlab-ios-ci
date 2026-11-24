@@ -5,8 +5,42 @@ public struct DiagnosticsMeasurement: Equatable, Sendable {
     public let value: String
 }
 
+public enum DiagnosticsRowKind: Equatable, Sendable {
+    case version, voice, developer, gallery
+}
+
+public struct DiagnosticsRow: Equatable, Sendable {
+    public let kind: DiagnosticsRowKind
+    public let labelKey: String
+}
+
+public struct DiagnosticsDeveloperRow: Equatable, Sendable {
+    public let labelKey: String
+    public let label: String
+    public let valueText: String
+    public let accessibilityId: String
+    public let minHeight: Double
+}
+
 /// What the diagnostics view draws at the audit stop: static measurements and the gallery button.
 public struct DiagnosticsScreen: Equatable, Sendable {
+    public static let rootIdentifier = "sproutlab.audit.diagnostics"
+
+    public static func developerRow(isOn: Bool, language: Language) -> DiagnosticsDeveloperRow {
+        DiagnosticsDeveloperRow(
+            labelKey: "diag.developer",
+            label: TextTable.string("diag.developer", language),
+            valueText: TextTable.string(isOn ? "diag.developer.on" : "diag.developer.off", language),
+            accessibilityId: "diag.developer",
+            minHeight: 44)
+    }
+
+    public let rows: [DiagnosticsRow] = [
+        DiagnosticsRow(kind: .version, labelKey: "diag.version"),
+        DiagnosticsRow(kind: .voice, labelKey: "diag.voice.fr"),
+        DiagnosticsRow(kind: .developer, labelKey: "diag.developer"),
+        DiagnosticsRow(kind: .gallery, labelKey: "gallery.open")
+    ]
     public let measurements: [DiagnosticsMeasurement]
     public let galleryButton: TerrariumControl
     /// The diagnostics read their source once; no repeating timer is needed.

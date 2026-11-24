@@ -11,7 +11,9 @@ public enum Screen: Equatable, Sendable {
 @MainActor
 @Observable
 public final class AppViewModel {
-    public private(set) var screen: Screen = .welcome
+    public private(set) var screen: Screen = .welcome {
+        didSet { if screen != oldValue { services.audio.screenChanged() } }
+    }
     public private(set) var language: Language
     public private(set) var totalStars: Int
     public private(set) var completedLevels: [String]
@@ -147,6 +149,7 @@ public final class AppViewModel {
         }
         round = model
         screen = .round
+        services.audio.roundChanged()
     }
 
     /// Opens the audit state: the seeded record replaces any saved one, a question stop opens its

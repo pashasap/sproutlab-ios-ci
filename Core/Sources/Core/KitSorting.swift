@@ -49,7 +49,8 @@ public struct KitSorting: KitComponent {
 
     /// Spoken label of a bin, independent of the selection; never empty.
     public func binLabel(at index: Int, language: Language) -> String {
-        let template = TextTable.string("kit.bin.label", language)
+        let named = bins.indices.contains(index) && bins[index].named
+        let template = TextTable.string(named ? "kit.bin.named.label" : "kit.bin.label", language)
         let what = binWhat(at: index, language: language)
         if what.isEmpty {
             return TextTable.string("kit.bin.fallback", language) + " \(index + 1)"

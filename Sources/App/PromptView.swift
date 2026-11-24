@@ -7,6 +7,8 @@ struct PromptView: View {
     let language: Language
     /// English prompt of an English reading item; when set it replaces the table prompt.
     var englishText: String = ""
+    /// Written formula such as "3 + 7 = ?" for an addition or subtraction round.
+    var formula: String?
 
     var body: some View {
         VStack(spacing: 8) {
@@ -14,6 +16,9 @@ struct PromptView: View {
             (englishText.isEmpty ? segments : Text(verbatim: englishText)).font(.title.weight(.bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.ink)
+            if let formula {
+                Text(verbatim: formula).font(.largeTitle.weight(.bold)).foregroundStyle(Palette.ink)
+            }
         }
     }
 

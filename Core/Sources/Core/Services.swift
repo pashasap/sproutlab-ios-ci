@@ -29,9 +29,15 @@ public protocol AudioService: Sendable {
     func speechWillStart()
     /// The voice finished (or failed); music returns.
     func speechDidEnd()
+    /// A new round opened; music is re-checked against the preference.
+    func roundChanged()
+    /// The visible screen changed; music is re-checked against the preference.
+    func screenChanged()
 }
 
 extension AudioService {
+    public func roundChanged() {}
+    public func screenChanged() {}
     public func playChime() {}
     public func play(_ recipe: SoundRecipe, on bus: AudioBus) {}
     public func speechWillStart() {}

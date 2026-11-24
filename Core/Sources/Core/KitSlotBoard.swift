@@ -21,6 +21,10 @@ public struct KitSlotBoard: KitComponent {
     public var complete: Bool { slots.allSatisfy { $0 != nil } }
     /// The undo control is always shown; with nothing to undo it simply does nothing.
     public var undoVisible: Bool { true }
+    /// Enabled whenever at least one tile was placed or taken back.
+    public var undoEnabled: Bool { !history.isEmpty }
+    /// The slots read left to right; the view draws an arrow so the direction is visible.
+    public var showsDirection: Bool { true }
 
     public mutating func select(_ token: String) {
         guard palette.contains(token), selectedToken != token else { return }
