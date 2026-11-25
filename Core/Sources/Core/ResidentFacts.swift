@@ -3,14 +3,14 @@ import Foundation
 /// One short sentence per resident, authored separately in French and in English.
 public enum ResidentFacts {
     private static let french: [String: String] = [
-        "sunflower": "Le tournesol tourne sa grande fleur vers le soleil.",
+        "sunflower": "Le jeune tournesol suit le soleil du matin au soir.",
         "earthworm": "Le ver de terre creuse des tunnels sous tes pieds.",
         "ant": "La fourmi porte des graines bien plus lourdes qu'elle.",
         "fern": "La fougère déroule ses feuilles comme une petite spirale.",
         "ladybug": "La coccinelle a des points noirs sur son dos rouge.",
         "tree-frog": "La rainette grimpe aux feuilles avec ses doigts collants.",
         "glowing-mushroom": "Le champignon lumineux brille doucement dans le noir.",
-        "axolotl": "L'axolotl sourit toujours et respire par ses plumeaux.",
+        "axolotl": "L'axolotl respire avec ses branchies en plumeau.",
         "butterfly": "Le papillon sort d'une chrysalide avec de grandes ailes.",
         "honeybee": "L'abeille danse pour montrer où sont les fleurs.",
         "snail": "L'escargot porte sa maison sur son dos.",
@@ -21,7 +21,7 @@ public enum ResidentFacts {
     ]
 
     private static let english: [String: String] = [
-        "sunflower": "A sunflower turns its big face to follow the sun.",
+        "sunflower": "A young sunflower turns to follow the sun all day.",
         "earthworm": "An earthworm digs tiny tunnels in the soil.",
         "ant": "An ant can carry a seed much heavier than itself.",
         "fern": "A young fern unrolls its leaf from a tight curl.",
