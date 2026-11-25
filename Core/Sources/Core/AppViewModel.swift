@@ -69,6 +69,12 @@ public final class AppViewModel {
         persist()
     }
 
+    /// Saves a child-made rhythm as symbolic events in the creations.
+    public func saveMusicPattern(_ pattern: MusicA4Pattern) {
+        record.creations.save(pattern)
+        persist()
+    }
+
     private func persist() {
         let report = store.save(record)
         lastSave = report

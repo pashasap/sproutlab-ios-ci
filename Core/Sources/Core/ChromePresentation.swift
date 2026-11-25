@@ -134,6 +134,7 @@ extension ChromeCatalog {
             + [summaryBackSymbolName, roundBack.symbolName, brandSymbolName, lockedSymbolName,
                                                 reviewSymbolName, suggestedSymbolName, journalSymbolName] + helpSymbolNames
             + ActivityIdentity.all.map { activitySymbolName($0.iconKind) }
+            + MusicNote.allCases.map(\.symbolName) + MusicBeat.allCases.map(\.symbolName)
         var seen = Set<String>()
         return names.filter { seen.insert($0).inserted }
     }

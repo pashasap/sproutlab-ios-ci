@@ -7,7 +7,10 @@ struct RoundScreen: View {
 
     var body: some View {
         if let round = app.round {
-            if round.robotKind != nil {
+            if round.robotKind == "music.A4" {
+                MusicA4View(app: app, language: app.language) { round.finishRobotQuestion() }
+                    .id(round.questionNumber)
+            } else if round.robotKind != nil {
                 RobotRoundView(round: round, language: app.language)
             } else {
                 RoundView(app: app, round: round)

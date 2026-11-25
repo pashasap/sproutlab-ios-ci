@@ -48,6 +48,7 @@ public struct TrailTilePresentation: Sendable, Equatable {
         isEnabled = lockIcon == nil
         symbolNames = [stateSymbolName] + [highlightSymbolName, reviewSymbolName].compactMap { $0 }
             + identities.map { ChromeCatalog.activitySymbolName($0.iconKind) }
+            + (level.track == "music" ? [ChromeCatalog.symbolName(for: .note)] : [])
         colourTokens = [stateColourToken, level.colourName]
     }
 

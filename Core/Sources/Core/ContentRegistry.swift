@@ -63,7 +63,8 @@ public struct ContentRegistry: Sendable {
         ContentTextTable(id: "reading-r3", entries: TextTable.readingR3Texts),
         ContentTextTable(id: "reading-recipes", entries: TextTable.readingRecipeTexts),
         ContentTextTable(id: "reading-en", entries: TextTable.readingENTexts),
-        ContentTextTable(id: "robot", entries: TextTable.robotTexts.merging(TextTable.robotRecipeTexts) { first, _ in first })
+        ContentTextTable(id: "robot", entries: TextTable.robotTexts.merging(TextTable.robotRecipeTexts) { first, _ in first }),
+        ContentTextTable(id: "music", entries: TextTable.musicTexts.merging(TextTable.musicA4Texts) { first, _ in first })
     ]
 }
 

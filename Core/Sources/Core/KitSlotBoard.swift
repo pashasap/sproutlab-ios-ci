@@ -16,7 +16,7 @@ public struct KitSlotBoard: KitComponent {
     private var history: [Step] = []
 
     public init(slotCount: Int, palette: [String]) {
-        slots = Array(repeating: nil, count: min(max(slotCount, 1), 5))
+        slots = Array(repeating: nil, count: min(max(slotCount, 1), 8))
         self.palette = palette
     }
 

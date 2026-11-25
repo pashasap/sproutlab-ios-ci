@@ -157,12 +157,28 @@ public struct ResidentStamps: Equatable, Codable, Sendable {
 
 public struct CreationsSection: Equatable, Codable, Sendable {
     public var items: [String] = []
-    public var isEmpty: Bool { items.isEmpty }
+    /// Child-made rhythm patterns, kept as symbolic events only.
+    public var musicPatterns: [MusicA4Pattern] = []
+    public var isEmpty: Bool { items.isEmpty && musicPatterns.isEmpty }
+
+    private enum CodingKeys: String, CodingKey { case items, musicPatterns }
 
     public init() {}
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         items = try c.decodeIfPresent([String].self, forKey: .items) ?? []
+        musicPatterns = try c.decodeIfPresent([MusicA4Pattern].self, forKey: .musicPatterns) ?? []
+    }
+
+    /// Older files stay byte-identical: the patterns key is written only when there are patterns.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(items, forKey: .items)
+        if !musicPatterns.isEmpty { try c.encode(musicPatterns, forKey: .musicPatterns) }
+    }
+
+    public mutating func save(_ pattern: MusicA4Pattern) {
+        musicPatterns.append(pattern)
     }
 }

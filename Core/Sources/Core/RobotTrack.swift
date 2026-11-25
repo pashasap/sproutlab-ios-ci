@@ -16,7 +16,8 @@ public enum TrackCatalog {
 
     public static let standard = Catalog(tracks: [
         ("math", "lane.math.title"), ("readingFR", "icon.readingFR.label"),
-        ("readingEN", "icon.readingEN.label"), ("robot", "track.robot.name")
+        ("readingEN", "icon.readingEN.label"), ("robot", "track.robot.name"),
+        ("music", "track.music.name")
     ].map { id, key in
         TrackDefinition(id: id, nameKey: key,
                         levelIds: LevelCatalog.standard.levels.filter { $0.track == id }.map(\.levelId))

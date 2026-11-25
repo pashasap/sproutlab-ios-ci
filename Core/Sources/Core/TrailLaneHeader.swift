@@ -23,6 +23,9 @@ public enum TrailLaneHeaders {
             return TrailLaneHeader(titleKey: "icon.readingEN.label", symbolName: "book.fill", language: language)
         case "robot":
             return TrailLaneHeader(titleKey: "track.robot.name", symbolName: "leaf.fill", language: language)
+        case "music":
+            return TrailLaneHeader(titleKey: "track.music.name",
+                                   symbolName: ChromeCatalog.symbolName(for: .note), language: language)
         default:
             return TrailLaneHeader(titleKey: mathKey, symbolName: "number", language: language)
         }

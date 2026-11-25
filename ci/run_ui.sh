@@ -21,7 +21,7 @@ RESULT=$A/result.xcresult
 xcrun simctl boot "$SIM_UDID" > /dev/null 2>&1
 xcrun simctl bootstatus "$SIM_UDID" -b > /dev/null
 echo "TIMING booted at $(( $(date +%s) - JOB_T0 ))s"
-xcrun simctl ui "$SIM_UDID" appearance light
+xcrun simctl ui "$SIM_UDID" appearance "${AUDIT_APPEARANCE:-light}"
 # a screenshot of a simulator that does not answer must not cost the budget: it gets 8 s
 shot () {
   xcrun simctl io "$SIM_UDID" screenshot $A/stall/$1.png > /dev/null 2>&1 & local p=$!
@@ -93,6 +93,36 @@ if kill -0 $pid 2>/dev/null; then
   kill $pid  # a xcodebuild killed outright leaves the bundle without Info.plist: ask it to stop and let it finalize
   for _ in $(seq 1 $FINALIZE_S); do kill -0 $pid 2>/dev/null || break; sleep 1; done
   kill -9 $pid 2>/dev/null
+fi
+if [ "${AUDIT_FUZZ:-0}" = "1" ] && [ -f "ci/UITests/AuditFuzzUITests.swift" ] && { [ -z "${SHARD_INDEX:-}" ] || [ "${SHARD_INDEX:-1}" = "1" ]; }; then
+  FUZZ_BUDGET=$((EXTENDED - 90))
+  FUZZ_ELAPSED=$(( $(date +%s) - JOB_T0 ))
+  if [ $done_at -gt 0 ] && [ $FUZZ_ELAPSED -lt $FUZZ_BUDGET ]; then
+    FUZZ_RESULT=$A/fuzz-result.xcresult
+    rm -rf $FUZZ_RESULT
+    echo "TIMING fuzz start at ${FUZZ_ELAPSED}s"
+    NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$XTR" \
+      -destination "platform=iOS Simulator,id=$SIM_UDID" \
+      -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 \
+      -parallel-testing-enabled NO -resultBundlePath $FUZZ_RESULT \
+      -only-testing:AuditStopsUITests/AuditFuzzUITests > $A/fuzz-test.log 2>&1 &
+    fpid=$!
+    FUZZ_HARD_CAP=$((EXTENDED - 30))
+    while kill -0 $fpid 2>/dev/null; do
+      sleep 2
+      if [ $(( $(date +%s) - JOB_T0 )) -ge $FUZZ_HARD_CAP ]; then
+        echo "TIMING fuzz cutoff at $(( $(date +%s) - JOB_T0 ))s" | tee -a $A/outcome.txt
+        kill $fpid 2>/dev/null
+        for _ in $(seq 1 10); do kill -0 $fpid 2>/dev/null || break; sleep 1; done
+        kill -9 $fpid 2>/dev/null
+        break
+      fi
+    done
+    wait $fpid 2>/dev/null || true
+    echo "TIMING fuzz done at $(( $(date +%s) - JOB_T0 ))s"
+  else
+    echo "TIMING fuzz skipped (done_at=$done_at elapsed=$FUZZ_ELAPSED budget=$FUZZ_BUDGET)"
+  fi
 fi
 if [ -f $RESULT/Info.plist ]; then echo "TIMING result bundle finalized"; else echo "OUTCOME result bundle not finalized" | tee -a $A/outcome.txt; fi
 # leave nothing running for the runner to clean up after the job (its "Complete job" took 2 min 10 s once, with a simulator

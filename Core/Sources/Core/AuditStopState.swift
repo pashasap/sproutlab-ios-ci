@@ -49,7 +49,8 @@ public struct AuditStopState: Equatable, Sendable {
         "robot-c1": Target(levelId: "robot-c1", kind: "robot.C1"),
         "robot-c2": Target(levelId: "robot-c2", kind: "robot.C2"),
         "robot-c3": Target(levelId: "robot-c3", kind: "robot.C3"),
-        "robot-c4": Target(levelId: "robot-c4", kind: "robot.C4")
+        "robot-c4": Target(levelId: "robot-c4", kind: "robot.C4"),
+        "music-a4": Target(levelId: "music-a4", kind: "music.A4")
     ]
 
     /// The first seed (counting up from 1) whose round holds the target kind, with the question index.

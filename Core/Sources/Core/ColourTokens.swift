@@ -82,6 +82,8 @@ public enum ColourTokens {
         "colour.gill": Swatch((0.85, 0.80, 0.90), (0.75, 0.70, 0.85)),
         "colour.readingFR": Swatch((0.45, 0.22, 0.60), (0.78, 0.62, 0.92)),
         "colour.readingEN": Swatch((0.05, 0.38, 0.45), (0.55, 0.85, 0.90)),
+        // Music lane: one orange-brown in both schemes, 3:1 on the grounds and apart from the other lanes in grey.
+        "colour.music": same(0.80, 0.35, 0.05),
         "colour.wing": Swatch((0.95, 0.55, 0.10), (1.00, 0.70, 0.25)),
         // Creature body colours are identical in light and dark and sit in a mid-luminance band
         // (about 0.15 to 0.19) so they keep 3:1 against every light and dark ground.
