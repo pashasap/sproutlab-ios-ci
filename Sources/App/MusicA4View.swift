@@ -1,13 +1,21 @@
 import SwiftUI
 import Core
 
-/// The A4 rhythm level: a program strip of sound and rest slots, a call and a contrasting answer.
+/// The A4 rhythm level: a seeded example strip of sound and rest slots, edited with a palette.
 struct MusicA4View: View {
     let app: AppViewModel
     let language: Language
     let onDone: () -> Void
-    @State private var strip = MusicA4.makeStrip(slotCount: MusicA4.slotCount)
-    @State private var played: [MusicBeat] = []
+    @State private var round: MusicA4Round
+
+    init(app: AppViewModel, language: Language, seed: UInt64, onDone: @escaping () -> Void) {
+        self.app = app
+        self.language = language
+        self.onDone = onDone
+        _round = State(initialValue: MusicA4Round(seed: seed))
+    }
+
+    private var presentation: MusicA4Presentation { round.presentation(language: language) }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -20,14 +28,14 @@ struct MusicA4View: View {
 
     private var slotRow: some View {
         HStack(spacing: 8) {
-            ForEach(0..<strip.board.slots.count, id: \.self) { index in
-                let beat = index < strip.cards.count ? strip.cards[index] : nil
-                Image(systemName: beat?.symbolName ?? RobotText.emptySlotSymbol)
-                    .font(.title2)
-                    .frame(width: 56, height: 56)
-                    .background(Palette.card, in: RoundedRectangle(cornerRadius: 12))
-                    .accessibilityLabel(beat.map { TextTable.string("music.a4.beat.\($0.rawValue)", language) }
-                                        ?? TextTable.string("music.a4.beat.empty", language))
+            ForEach(Array(presentation.slots.enumerated()), id: \.offset) { index, slot in
+                Button { round.tapSlot(index) } label: {
+                    Image(systemName: slot.symbolName)
+                        .font(.title2)
+                        .frame(width: 56, height: 56)
+                        .background(Palette.card, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .accessibilityLabel(slot.accessibilityLabel)
             }
         }
     }
@@ -37,7 +45,7 @@ struct MusicA4View: View {
             ForEach(MusicBeat.allCases, id: \.self) { beat in
                 RobotIconButton(symbol: beat.symbolName,
                                 label: TextTable.string("music.a4.beat.\(beat.rawValue)", language),
-                                side: 56) { strip.add(beat) }
+                                side: 56) { round.selectPalette(beat) }
             }
         }
     }
@@ -45,14 +53,14 @@ struct MusicA4View: View {
     private var controls: some View {
         HStack(spacing: 12) {
             RobotIconButton(symbol: RobotText.playSymbol, label: TextTable.string("music.a4.play", language),
-                            side: 56) { strip.rewind(); played = strip.play() }
-            Button { strip = MusicA4.expanding(strip) } label: {
+                            side: 56) { var strip = round.strip; _ = strip.play() }
+            Button { round.expand() } label: {
                 Text(verbatim: String(MusicA4.expandedSlotCount)).frame(width: 56, height: 56)
             }
             .accessibilityLabel(TextTable.string("music.a4.expand", language))
             RobotIconButton(symbol: ChromeCatalog.symbolName(for: .check),
                             label: TextTable.string("music.a4.save", language), side: 56) {
-                app.saveMusicPattern(MusicA4Pattern(events: MusicA4.events(for: strip)))
+                app.saveMusicPattern(MusicA4Pattern(events: MusicA4.events(for: round.strip)))
                 onDone()
             }
         }

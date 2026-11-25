@@ -164,7 +164,7 @@ extension TextTable {
                                         "Here is a rhythm: change it as you like."),
         "music.a4.beat.lowSound": TextEntry("Son grave", "Low sound"),
         "music.a4.beat.highSound": TextEntry("Son aigu", "High sound"),
-        "music.a4.beat.rest": TextEntry("Pause", "Rest"),
+        "music.a4.beat.rest": TextEntry("Silence", "Rest"),
         "music.a4.beat.empty": TextEntry("Case vide", "Empty slot"),
         "music.a4.play": TextEntry("Écouter", "Play"),
         "music.a4.expand": TextEntry("Huit cases", "Eight slots"),

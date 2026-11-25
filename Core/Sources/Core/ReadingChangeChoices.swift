@@ -12,7 +12,28 @@ enum ReadingChangeChoices {
     static func words(start: String, target: String) -> [String] {
         let pool = Array(Set(ReadingR2Change.vocabulary).union(extraWords)).sorted()
         let others = pool.filter { $0 != target && $0 != start && oneLetterApart($0, start) }
-        return [target] + others.prefix(2)
+        let real = [target] + others.prefix(2)
+        return real.count == 3 ? real : real + fallback(start: start, target: target, taken: real, need: 3 - real.count)
+    }
+
+    /// Deterministic bounded fallback: at most `start.count * 26` one-letter variants, changed position of
+    /// the target first, then left to right, letters in alphabetical order.
+    private static func fallback(start: String, target: String, taken: [String], need: Int) -> [String] {
+        let letters = Array(start)
+        let first = zip(letters, target).enumerated().first { $0.element.0 != $0.element.1 }?.offset ?? 0
+        let positions = [first] + letters.indices.filter { $0 != first }
+        var result: [String] = []
+        for position in positions {
+            for letter in "abcdefghijklmnopqrstuvwxyz" where letter != letters[position] {
+                var variant = letters
+                variant[position] = letter
+                let word = String(variant)
+                if word == target || taken.contains(word) || result.contains(word) { continue }
+                result.append(word)
+                if result.count == need { return result }
+            }
+        }
+        return result
     }
 
     private static func oneLetterApart(_ first: String, _ second: String) -> Bool {

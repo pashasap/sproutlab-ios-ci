@@ -33,7 +33,9 @@ enum ReadingENPresenter {
         case .digraph: return (bank.graphemes.first ?? "", digraphPool)
         case .changeGrapheme:
             let pair = zip(bank.words[0], bank.words[1]).first { $0 != $1 }
-            return (pair.map { String($0.1) } ?? "", letterPool)
+            // A wrong letter must not be the word's own letter: putting it back changes nothing.
+            let own = pair.map { String($0.0) } ?? ""
+            return (pair.map { String($0.1) } ?? "", letterPool.filter { $0 != own })
         default:
             let right = bank.words.last ?? ""
             let words = ReadingENBank.items(rung: bank.rung).flatMap(\.words).filter { !$0.contains(" ") }

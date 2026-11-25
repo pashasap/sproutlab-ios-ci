@@ -43,6 +43,6 @@ public enum AuditStops {
         AuditStop(id: "robot-c2", root: "sproutlab.audit.robot-c2", title: "Little Robot C2", expectation: "The C2 grid shows rocks, empty slots and a palette of four arrow buttons that are each at least 56 points.", flows: ["F-20"], defects: []),
         AuditStop(id: "robot-c3", root: "sproutlab.audit.robot-c3", title: "Little Robot C3", expectation: "The C3 grid shows a short arrow program with a swap palette and a play control.", flows: ["F-21"], defects: []),
         AuditStop(id: "robot-c4", root: "sproutlab.audit.robot-c4", title: "Little Robot C4", expectation: "The C4 screen shows the grid, a visible arrow program strip with a repeat block xN wrapping arrows, the 2...5 repeat-count controls and the play control.", flows: ["F-21"], defects: []),
-        AuditStop(id: "music-a4", root: "sproutlab.audit.music-a4", title: "Music A4 rhythm", expectation: "The A4 screen shows a visible 4-slot strip filled with sound and rest symbols, two drum sounds, a play control and an expand-to-8 control.", flows: [], defects: []),
+        AuditStop(id: "music-a4", root: "sproutlab.audit.music-a4", title: "Music A4 rhythm", expectation: "The A4 screen shows a visible 4-slot strip already filled with an example pattern of low sound, high sound and rest symbols, a play control and an expand-to-8 control.", flows: [], defects: []),
     ]
 }
