@@ -33,6 +33,11 @@ struct RoundView: View {
                     promptAndHelper(wide: wide)
                     if round.kitPresentation != nil {
                         ReadingKitHost(round: round, language: app.language)
+                    } else if let question = round.sentenceQuestion {
+                        SentenceQuestionView(question: question, language: app.language,
+                                             actions: .init(
+                                                answer: { round.select(choiceIndex: $0, questionNumber: round.questionNumber) },
+                                                hear: { app.hearSentence(question) }))
                     } else {
                         choices
                     }
@@ -81,14 +86,16 @@ struct RoundView: View {
                        englishText: round.readingPresentation?.promptText ?? "",
                        segments: round.m3Presentation == nil && round.m4Presentation == nil ? [] : round.promptSegments,
                        formula: round.m3Presentation == nil ? round.stimulus.presentation.formula : nil)
-            Button { speak() } label: {
-                Image(systemName: ChromeCatalog.symbolName(for: .ear))
-                    .font(.title2)
-                    .frame(minWidth: Touch.minimumPoints, minHeight: Touch.minimumPoints)
+            if round.sentenceQuestion == nil {
+                Button { speak() } label: {
+                    Image(systemName: ChromeCatalog.symbolName(for: .ear))
+                        .font(.title2)
+                        .frame(minWidth: Touch.minimumPoints, minHeight: Touch.minimumPoints)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .accessibilityLabel(TextTable.string("a11y.speak", app.language))
+                .accessibilityIdentifier(SproutIdentifier.listen)
             }
-            .buttonStyle(PrimaryButtonStyle())
-            .accessibilityLabel(TextTable.string("a11y.speak", app.language))
-            .accessibilityIdentifier(SproutIdentifier.listen)
         }
         .padding(20)
         .frame(maxWidth: .infinity)
@@ -121,7 +128,7 @@ struct RoundView: View {
                 M3View(shown: shown, label: TextTable.string("a11y.dots", app.language), language: app.language)
             } else if let shown = round.m4Presentation {
                 M4View(shown: shown, language: app.language)
-            } else if round.readingPresentation == nil {
+            } else if round.readingPresentation == nil, round.sentenceQuestion == nil {
                 let presentation = round.stimulus.presentation
                 DotsView(presentation: presentation, cue: round.wrongCue?.target,
                          isComparison: round.identity == .comparison)
@@ -139,10 +146,13 @@ struct RoundView: View {
     private var choices: some View {
         let number = round.questionNumber
         let dimmed = round.wrongCue?.dimmedChoices ?? []
+        // M1 numerals come from the Core presentation value, index-aligned with the item's choices.
+        let m1Numerals = round.m1Presentation?.choices ?? []
         return HStack(spacing: 16) {
             ForEach(Array(round.choiceLabels.enumerated()), id: \.offset) { index, label in
                 let reading = round.readingPresentation?.choices
-                let shown = reading?.indices.contains(index) == true ? reading![index].text : label
+                let shown = reading?.indices.contains(index) == true ? reading![index].text
+                    : (m1Numerals.indices.contains(index) ? String(m1Numerals[index]) : label)
                 Button { round.select(choiceIndex: index, questionNumber: number) } label: {
                     Text(shown)
                 }

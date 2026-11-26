@@ -45,7 +45,8 @@ public enum M1Generator {
 
     /// The transfer slot always uses the scattered layout and the least familiar variant.
     static func draw(kind: M1QuestionKind, transfer: Bool, rng: inout SeededRandom) -> Config {
-        let low = kind == .tapCount ? 0 : 1
+        // A count question always shows at least two objects, so counting means something.
+        let low = kind == .tapCount ? 2 : 1
         let count = low + rng.below(11 - low)
         let filled = kind == .fillTray ? rng.below(trayCapacity - count + 1) : 0
         let layout: M1Layout = transfer ? .scattered : (rng.below(2) == 0 ? .clustered : .scattered)
@@ -57,6 +58,7 @@ public enum M1Generator {
     public static func allConfigurations() -> [Item] {
         var out: [Item] = []
         for kind in M1QuestionKind.allCases {
+            // The lint domain stays the full historical range, including the two smallest counts.
             let low = kind == .tapCount ? 0 : 1
             // A representative domain keeps the exhaustive lint fast while covering every kind and layout.
             let variantCount = kind == .fillTray ? 1 : 2
@@ -88,6 +90,7 @@ public enum M1Generator {
     static func presentation(_ config: Config, options: ItemOptions) -> M1Presentation {
         let shown = M1Layouts.collection(count: config.count, layout: config.layout, variant: config.variant)
         var out = M1Presentation(kind: config.kind, groups: [shown])
+        out.choices = options.choices
         switch config.kind {
         case .tapCount:
             break
@@ -107,6 +110,10 @@ public enum M1Generator {
 /// Deterministic object positions: a compact block for clustered, spread cells for scattered.
 enum M1Layouts {
     static let sizes = [0.8, 1.0, 1.2]
+    /// No two object centres of one collection are closer than this, in unit-square coordinates.
+    static let minimumSeparation = 0.14
+    /// Largest nudge of a scattered object from its cell centre; keeps neighbouring objects apart.
+    static let scatteredJitter = 0.03
 
     /// Cheap deterministic walk of the grid: no shuffled array is allocated per item.
     static func collection(count: Int, layout: M1Layout, variant: Int) -> M1Collection {
@@ -114,23 +121,45 @@ enum M1Layouts {
         let rows = layout == .clustered ? 3 : 4
         let cells = columns * rows
         let step = [1, 3, 7, 9, 11].first { gcd($0, cells) == 1 } ?? 1
-        var cell = (variant * 5 + count * 3) % cells
-        var objects: [M1Object] = []
-        objects.reserveCapacity(count)
+        let start = (variant * 5 + count * 3) % cells
+        var cell = start
+        var centres: [M1Object] = []
+        centres.reserveCapacity(count)
         for index in 0..<count {
-            let x = Double(cell % columns)
-            let y = Double(cell / columns)
+            let column = cell % columns
+            let row = cell / columns
             let size = sizes[(index + variant) % sizes.count]
-            if layout == .clustered {
-                objects.append(M1Object(x: 0.25 + x * 0.16, y: 0.25 + y * 0.2, size: size))
-            } else {
-                let jitter = Double((cell * 37 + index * 11 + variant * 5) % 11 - 5) / 100
-                objects.append(M1Object(x: (x + 0.5) / Double(columns) + jitter,
-                                       y: (y + 0.5) / Double(rows) - jitter, size: size))
-            }
+            centres.append(layout == .clustered
+                ? M1Object(x: 0.25 + Double(column) * 0.16, y: 0.25 + Double(row) * 0.2, size: size)
+                : M1Object(x: (Double(column) + 0.5) / Double(columns),
+                           y: (Double(row) + 0.5) / Double(rows), size: size))
             cell = (cell + step) % cells
         }
-        return M1Collection(layout: layout, objects: objects)
+        guard layout == .scattered else { return M1Collection(layout: layout, objects: centres) }
+        let spread = centres.enumerated().map { scattered($0.element, step: $0.offset, variant: variant) }
+        return M1Collection(layout: layout, objects: separated(spread) ? spread : centres)
+    }
+
+    /// One scattered object: its cell centre nudged in both axes by a bounded deterministic amount.
+    private static func scattered(_ object: M1Object, step: Int, variant: Int) -> M1Object {
+        let dx = Double((step * 37 + variant * 5) % 7 - 3) / 100
+        let dy = Double((step * 23 + variant * 3) % 5 - 2) / 100
+        let limit = scatteredJitter
+        return M1Object(x: min(max(object.x + min(max(dx, -limit), limit), 0), 1),
+                        y: min(max(object.y + min(max(dy, -limit), limit), 0), 1),
+                        size: object.size)
+    }
+
+    /// True when every pair of object centres is at least `minimumSeparation` apart.
+    static func separated(_ objects: [M1Object]) -> Bool {
+        for i in objects.indices {
+            for j in objects.indices where j > i {
+                let dx = objects[i].x - objects[j].x
+                let dy = objects[i].y - objects[j].y
+                if (dx * dx + dy * dy).squareRoot() < minimumSeparation { return false }
+            }
+        }
+        return true
     }
 
     private static func gcd(_ a: Int, _ b: Int) -> Int {

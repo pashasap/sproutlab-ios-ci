@@ -80,7 +80,7 @@ public enum EnglishSentenceBank {
         item(18, .order, [sight("a"), word("dog"), word("can"), word("dig")]),
         item(19, .order, [sight("the"), word("red"), word("hen"), word("ran")]),
         item(20, .order, [sight("a"), word("big"), word("duck"), word("swam")]),
-        item(21, .order, [word("pup"), word("sits")]),
+        item(21, .order, [sight("the"), word("pup"), word("sits")]),
         item(22, .order, [word("mud"), word("gets"), word("wet")]),
         item(23, .order, [sight("a"), word("hen"), word("can"), word("peck")]),
         item(24, .order, [sight("the"), word("big"), word("dog"), word("ran")])

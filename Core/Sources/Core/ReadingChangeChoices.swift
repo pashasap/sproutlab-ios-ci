@@ -60,7 +60,9 @@ extension Item {
 
 extension RoundViewModel {
     /// False for a kit round that has no feedback and no revealed help steps: no empty card is drawn.
+    /// A sentence question draws its own card, so only its feedback text earns a second card.
     public var showsStimulusCard: Bool {
-        kitPresentation == nil || feedbackText?.isEmpty == false || revealedHelpSteps > 0
+        if sentenceQuestion != nil { return feedbackText != nil }
+        return kitPresentation == nil || feedbackText?.isEmpty == false || revealedHelpSteps > 0
     }
 }

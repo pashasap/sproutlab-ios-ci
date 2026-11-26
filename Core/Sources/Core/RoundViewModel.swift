@@ -103,6 +103,12 @@ public final class RoundViewModel {
     /// Reading presentation of the current question; nil for math and notices.
     public var readingPresentation: ReadingItemPresentation? { round.currentItem.readingPresentation(language) }
 
+    /// The sentence question of the current item, built from the item alone so it is ready before the
+    /// first frame; nil for every question that is not a sentence.
+    public var sentenceQuestion: SentenceQuestion? {
+        SentenceQuestions.question(item: round.currentItem, levelId: levelId)
+    }
+
     /// Identity of the current question; independent of language.
     public var identity: ActivityIdentity { round.currentItem.identity }
 

@@ -204,10 +204,19 @@ public final class AppViewModel {
     /// Tap to Hear for a kit reading item: the syllable or word, through the round's own command.
     public func hear() { round?.hear(speech: services.speech) }
 
+    /// Tap to Hear on a sentence question: the whole sentence, in the sentence's own language.
+    public func hearSentence(_ question: SentenceQuestion) {
+        speak(question.speechText, voiceTag: question.voiceTag)
+    }
+
     /// Speaks the current prompt with the music ducked; failures never block the round.
     public func speakPrompt() {
         guard let round else { return }
-        let tag = language == .fr ? "fr-FR" : "en-US"
+        speak(round.speechText, voiceTag: language == .fr ? "fr-FR" : "en-US")
+    }
+
+    /// One explicit speech call: music ducked, a missing voice noted, never called on its own.
+    private func speak(_ text: String, voiceTag: String) {
         var mixer = BusMixer()
         mixer.speechWillStart()
         services.audio.setMusicLevel(mixer.musicGain)
@@ -217,7 +226,7 @@ public final class AppViewModel {
             services.audio.speechDidEnd()
             services.audio.setMusicLevel(mixer.musicGain)
         }
-        let outcome = try? services.speech.speak(voiceTag: tag, text: round.speechText)
+        let outcome = try? services.speech.speak(voiceTag: voiceTag, text: text)
         notice = outcome == .voiceMissing ? "notice.voice-missing" : nil
     }
 

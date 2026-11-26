@@ -30,6 +30,8 @@ public struct M1Presentation: Sendable, Equatable {
     public let kind: M1QuestionKind
     /// tapCount: the shown collection; fillTray: the supply; matchGroups: the target.
     public var groups: [M1Collection]
+    /// The three numerals offered with the question: distinct, and one of them is the object count.
+    public var choices: [Int] = []
     /// matchGroups only: one collection per numeral choice, parallel to the item's choices.
     public var choiceGroups: [M1Collection] = []
     /// fillTray only: the tray; the answer is the number of empty slots.
