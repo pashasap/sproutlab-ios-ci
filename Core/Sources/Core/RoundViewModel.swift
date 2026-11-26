@@ -109,6 +109,11 @@ public final class RoundViewModel {
         SentenceQuestions.question(item: round.currentItem, levelId: levelId)
     }
 
+    /// The text question of the current item, built from the item alone; nil for every other question.
+    public var textQuestion: TextQuestion? {
+        TextQuestions.question(item: round.currentItem)
+    }
+
     /// Identity of the current question; independent of language.
     public var identity: ActivityIdentity { round.currentItem.identity }
 

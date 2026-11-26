@@ -38,6 +38,12 @@ struct RoundView: View {
                                              actions: .init(
                                                 answer: { round.select(choiceIndex: $0, questionNumber: round.questionNumber) },
                                                 hear: { app.hearSentence(question) }))
+                    } else if let question = round.textQuestion {
+                        TextQuestionView(question: question, revealedSteps: round.revealedHelpSteps,
+                                         language: app.language,
+                                         actions: .init(
+                                            answer: { round.select(choiceIndex: $0, questionNumber: round.questionNumber) },
+                                            hear: { app.hearText(question) }))
                     } else {
                         choices
                     }
@@ -86,7 +92,7 @@ struct RoundView: View {
                        englishText: round.readingPresentation?.promptText ?? "",
                        segments: round.m3Presentation == nil && round.m4Presentation == nil ? [] : round.promptSegments,
                        formula: round.m3Presentation == nil ? round.stimulus.presentation.formula : nil)
-            if round.sentenceQuestion == nil {
+            if round.sentenceQuestion == nil && round.textQuestion == nil {
                 Button { speak() } label: {
                     Image(systemName: ChromeCatalog.symbolName(for: .ear))
                         .font(.title2)

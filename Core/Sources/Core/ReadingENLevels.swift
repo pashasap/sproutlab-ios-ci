@@ -47,9 +47,10 @@ extension Curriculum {
         readingENLevel(.en1, type: "reading-en-sounds", after: nil),
         readingENLevel(.en2, type: "reading-en-words", after: ReadingENRung.en1.levelId),
         readingENLevel(.en3, type: "reading-en-digraphs", after: ReadingENRung.en2.levelId),
-        readingEN6Level
+        readingEN6Level,
+        readingEN8Level
     ]
 
     static let readingENTitleKeys = ReadingENRung.allCases.map { "trail.level.\($0.levelId).title" }
-        + ["trail.level.reading-en-r6.title"]
+        + ["trail.level.reading-en-r6.title", "trail.level.reading-en-r8.title"]
 }

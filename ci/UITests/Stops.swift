@@ -33,6 +33,8 @@ let auditStops: [(id: String, root: String)] = [
     (id: "music-a4", root: "sproutlab.audit.music-a4"),
     (id: "reading-fr-r6", root: "sproutlab.audit.reading-fr-r6"),
     (id: "reading-en-r6", root: "sproutlab.audit.reading-en-r6"),
+    (id: "reading-fr-r8", root: "sproutlab.audit.reading-fr-r8"),
+    (id: "reading-en-r8", root: "sproutlab.audit.reading-en-r8"),
 ]
 
 extension AuditStopsUITests {
@@ -70,4 +72,6 @@ extension AuditStopsUITests {
     @MainActor func test_032_music_a4() { visit("music-a4", root: "sproutlab.audit.music-a4") }
     @MainActor func test_033_reading_fr_r6() { visit("reading-fr-r6", root: "sproutlab.audit.reading-fr-r6") }
     @MainActor func test_034_reading_en_r6() { visit("reading-en-r6", root: "sproutlab.audit.reading-en-r6") }
+    @MainActor func test_035_reading_fr_r8() { visit("reading-fr-r8", root: "sproutlab.audit.reading-fr-r8") }
+    @MainActor func test_036_reading_en_r8() { visit("reading-en-r8", root: "sproutlab.audit.reading-en-r8") }
 }

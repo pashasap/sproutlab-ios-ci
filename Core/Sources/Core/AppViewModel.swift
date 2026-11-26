@@ -209,6 +209,11 @@ public final class AppViewModel {
         speak(question.speechText, voiceTag: question.voiceTag)
     }
 
+    /// Tap to Hear on a text question: the whole text, in the text's own language.
+    public func hearText(_ question: TextQuestion) {
+        speak(question.speechText, voiceTag: question.voiceTag)
+    }
+
     /// Speaks the current prompt with the music ducked; failures never block the round.
     public func speakPrompt() {
         guard let round else { return }

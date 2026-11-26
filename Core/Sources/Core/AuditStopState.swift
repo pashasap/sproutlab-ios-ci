@@ -46,7 +46,9 @@ public struct AuditStopState: Equatable, Sendable {
         "reading-blend-word": Target(levelId: "reading-fr-r3", kind: "r3.blendWord"),
         "reading-repair-split": Target(levelId: "reading-fr-r3", kind: "r3.repairSplit"),
         "reading-fr-r6": Target(levelId: "reading-fr-r6", kind: "frr6.sentence"),
+        "reading-fr-r8": Target(levelId: "reading-fr-r8", kind: "frr8.text"),
         "reading-en-r6": Target(levelId: "reading-en-r6", kind: "enr6.sentence"),
+        "reading-en-r8": Target(levelId: "reading-en-r8", kind: "enr8.text"),
         "reading-en-sounds": Target(levelId: "reading-en-en1", kind: "en1.graphemeSound"),
         "reading-en-words": Target(levelId: "reading-en-en2", kind: "en2.changeGrapheme"),
         "reading-en-digraphs": Target(levelId: "reading-en-en3", kind: "en3.digraph"),
@@ -96,7 +98,9 @@ public struct AuditStopState: Equatable, Sendable {
         if let robot = item.robotId { return robot }
         if item.m1 != nil { return "math.m1" }
         if let id = item.readingId, FrenchSentenceBank.item(id: id) != nil { return "frr6.sentence" }
+        if let id = item.readingId, FrenchTextBank.item(id: id) != nil { return "frr8.text" }
         if let id = item.readingId, EnglishSentenceBank.item(id: id) != nil { return "enr6.sentence" }
+        if let id = item.readingId, EnglishTextBank.item(id: id) != nil { return "enr8.text" }
         if let id = item.readingId, let english = ReadingENBank.item(id: id) {
             return "\(english.rung.rawValue).\(english.activity.rawValue)"
         }

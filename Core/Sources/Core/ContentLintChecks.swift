@@ -96,6 +96,16 @@ extension ContentLint {
                 && SentenceDecodability.checkEnglish(sentence).isEmpty
             return valid ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]
         }
+        if let id = item.readingId, let text = FrenchTextBank.item(id: id) {
+            let valid = item.choices.count == 3 && (0..<3).contains(item.correctIndex)
+                && ContentLint.textFindings(text).isEmpty
+            return valid ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]
+        }
+        if let id = item.readingId, let text = EnglishTextBank.item(id: id) {
+            let valid = item.choices.count == 3 && (0..<3).contains(item.correctIndex)
+                && ContentLint.englishTextFindings(text).isEmpty
+            return valid ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]
+        }
         if let id = item.readingId, ReadingENBank.item(id: id) != nil {
             return item.choices.count == 3 && (0..<3).contains(item.correctIndex)
                 ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]

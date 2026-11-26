@@ -5,6 +5,8 @@ public enum ActivityIconKind: Sendable, Equatable, Hashable {
     case countedRow, tenFrameSplit, bridgeDownStep, stackedTens
     case sentenceLine
     case englishSentenceLine
+    case textLines
+    case englishTextLines
 }
 
 public enum ActivityColourToken: Sendable, Equatable, Hashable, CaseIterable {
@@ -13,6 +15,8 @@ public enum ActivityColourToken: Sendable, Equatable, Hashable, CaseIterable {
     case jade
     case coral
     case saffron
+    case mint
+    case azure
 }
 
 /// Light and dark value of every activity colour token; the app renders these values.
@@ -45,6 +49,8 @@ public enum ActivityPalette {
         case .jade: return (0x0B6B58, 0x7FE3CB)
         case .coral: return (0xA33A2B, 0xFFAB98)
         case .saffron: return (0x8A4B00, 0xF7C67A)
+        case .mint: return (0x0F6B4F, 0x8FE8C4)
+        case .azure: return (0x1D4E89, 0x9CC4F5)
         }
     }
 
@@ -132,10 +138,19 @@ public struct ActivityIdentity: Sendable, Equatable, Hashable {
     public static let readSentenceEN = ActivityIdentity(.englishSentenceLine, .saffron, name: "read-sentence-en",
                                                         prompt: PromptSpec(key: "reading.prompt.sentence"))
 
+    /// Reading a whole text: mark the sentence, link the name, show the evidence beside the choice.
+    public static let readText = ActivityIdentity(.textLines, .mint, name: "read-text",
+                                                  prompt: PromptSpec(key: "reading.prompt.text"))
+
+    /// Reading a whole English text: the same ladder over the English text bank.
+    public static let readTextEN = ActivityIdentity(.englishTextLines, .azure, name: "read-text-en",
+                                                    prompt: PromptSpec(key: "reading.prompt.text"))
+
     public static let all: [ActivityIdentity] = [counting, makeTen, plus, subtraction, patterns, comparison,
                                                  listenSound, buildSyllable, readWord, orderSounds, blendSounds,
                                                  changeLetter, findPair, blendWord, repairWord, countObjects,
-                                                 composeTen, bridgeTen, tensOnes, readSentence, readSentenceEN]
+                                                 composeTen, bridgeTen, tensOnes, readSentence, readSentenceEN,
+                                                 readText, readTextEN]
 
     public func accessibilityName(_ language: Language) -> String {
         TextTable.string(accessibilityNameKey, language)
@@ -165,6 +180,8 @@ public struct ActivityIdentity: Sendable, Equatable, Hashable {
         case .stackedTens: return "stacked-ten-bundles"
         case .sentenceLine: return "sentence-line"
         case .englishSentenceLine: return "english-sentence-line"
+        case .textLines: return "text-lines"
+        case .englishTextLines: return "english-text-lines"
         }
     }
 
@@ -281,6 +298,8 @@ extension LevelDefinition {
         case "reading-words": return [.findPair, .blendWord, .repairWord]
         case "reading-sentences": return [.readSentence]
         case "reading-en-sentences": return [.readSentenceEN]
+        case "reading-texts": return [.readText]
+        case "reading-en-texts": return [.readTextEN]
         default: return []
         }
     }

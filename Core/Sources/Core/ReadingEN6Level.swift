@@ -96,7 +96,8 @@ extension SentenceDecodability {
     public static let englishTaughtGraphemes: Set<String> = ReadingENCorrespondences.taught(upTo: .en3)
 
     /// The whole English words a sentence may use instead of segmenting them.
-    public static let englishSightWords: Set<String> = ["the", "a", "is", "in", "on", "to"]
+    public static let englishSightWords: Set<String> = ["the", "a", "is", "in", "on", "to",
+                                                        "has", "his", "he", "she", "we", "i", "puts", "of", "was"]
 
     /// The decodability check of an English sentence: an empty result means the sentence passes.
     public static func checkEnglish(_ item: SentenceItem) -> [String] {

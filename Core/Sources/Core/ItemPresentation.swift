@@ -9,6 +9,7 @@ extension Item {
         if m3 != nil { return .bridgeTen }
         if m4 != nil { return .tensOnes }
         if let id = readingId, FrenchSentenceBank.item(id: id) != nil { return .readSentence }
+        if let id = readingId, FrenchTextBank.item(id: id) != nil { return .readText }
         if let id = readingId, EnglishSentenceBank.item(id: id) != nil { return .readSentenceEN }
         if let id = readingId, let bank = ReadingBank.item(id: id) { return ActivityIdentity.reading(bank) }
         if readingId != nil { return .listenSound }

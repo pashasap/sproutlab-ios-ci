@@ -21,6 +21,8 @@ public enum ContentLint {
             findings.append(ContentFinding(kind: "unknown-colour", subject: token))
         }
         findings += readingENFindings(ReadingENBank.allItems)
+        findings += frenchTextFindings(FrenchTextBank.items)
+        findings += englishTextFindings(EnglishTextBank.items)
         let texts = mergedTexts(registry.tables)
         for level in registry.levels {
             findings += levelFindings(level, registry: registry, texts: texts)

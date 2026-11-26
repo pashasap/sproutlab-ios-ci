@@ -123,6 +123,8 @@ extension ChromeCatalog {
         case .stackedTens: return "square.stack.3d.up"
         case .sentenceLine: return "flag.fill"
         case .englishSentenceLine: return "flag"
+        case .textLines: return "signpost.right"
+        case .englishTextLines: return "number.circle"
         }
     }
 
@@ -140,6 +142,7 @@ extension ChromeCatalog {
             + [summaryBackSymbolName, roundBack.symbolName, brandSymbolName, lockedSymbolName,
                                                 reviewSymbolName, suggestedSymbolName, journalSymbolName] + helpSymbolNames
             + ActivityIdentity.all.map { activitySymbolName($0.iconKind) }
+            + ["link"]
             + MusicNote.allCases.map(\.symbolName) + MusicBeat.allCases.map(\.symbolName)
         var seen = Set<String>()
         return names.filter { seen.insert($0).inserted }
