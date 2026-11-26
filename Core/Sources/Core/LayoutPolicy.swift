@@ -86,7 +86,7 @@ public struct ScreenMetrics: Equatable, Sendable {
     }
 }
 
-public enum TextScale: Sendable {
+public enum TextScale: CaseIterable, Sendable {
     case standard, xl
 
     var factor: Double { self == .xl ? 1.3 : 1.0 }

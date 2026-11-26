@@ -92,6 +92,7 @@ extension ChromeCatalog {
     public static let suggestedSymbolName = "star.fill"
     /// One symbol per help-ladder step: cue, partial worked example, one-move demonstration.
     public static let helpSymbolNames = ["circle", "circle.fill", "figure.walk"]
+    static let textEvidenceLinkSymbolName = "link"
 
     /// Symbol of a trail tile: check when completed, play when open, lock when locked.
     public static func levelStateSymbolName(isCompleted: Bool, isUnlocked: Bool) -> String {
@@ -142,7 +143,7 @@ extension ChromeCatalog {
             + [summaryBackSymbolName, roundBack.symbolName, brandSymbolName, lockedSymbolName,
                                                 reviewSymbolName, suggestedSymbolName, journalSymbolName] + helpSymbolNames
             + ActivityIdentity.all.map { activitySymbolName($0.iconKind) }
-            + ["link"]
+            + [textEvidenceLinkSymbolName]
             + MusicNote.allCases.map(\.symbolName) + MusicBeat.allCases.map(\.symbolName)
         var seen = Set<String>()
         return names.filter { seen.insert($0).inserted }

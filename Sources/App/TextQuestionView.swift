@@ -4,23 +4,21 @@ import Core
 /// The text question: every sentence of the text, one prompt, exactly two choices, a Tap to Hear
 /// control for the whole text and the three help steps. It draws the Core value and holds no state.
 struct TextQuestionView: View {
-    let question: TextQuestion
-    /// Help steps revealed so far; the ladder never changes the answer.
-    let revealedSteps: Int
-    let language: Language
+    let screen: TextScreen
     let actions: Actions
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     struct Actions {
         let answer: (Int) -> Void
         let hear: () -> Void
+        let revealHelp: (Int) -> Void
     }
-
-    private var help: TextHelp { question.help(step: revealedSteps) }
 
     var body: some View {
         VStack(spacing: 16) {
             prompt
             sentences
+            helpSteps
             choices
             hearButton
         }
@@ -30,7 +28,7 @@ struct TextQuestionView: View {
     }
 
     private var prompt: some View {
-        Text(question.promptText)
+        Text(screen.promptText)
             .font(.title3.weight(.semibold))
             .foregroundStyle(Palette.ink)
             .multilineTextAlignment(.center)
@@ -39,13 +37,13 @@ struct TextQuestionView: View {
 
     private var sentences: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(question.sentences.enumerated()), id: \.offset) { index, words in
+            ForEach(Array(screen.sentences.enumerated()), id: \.offset) { index, words in
                 Text(words.joined(separator: " "))
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
                     .foregroundStyle(Palette.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(6)
-                    .background(help.markedSentence == index ? Palette.accent.opacity(0.18) : Color.clear,
+                    .background(screen.markedSentence == index ? Palette.accent.opacity(0.18) : Color.clear,
                                 in: RoundedRectangle(cornerRadius: 8))
                     .accessibilityIdentifier(SproutIdentifier.stimulus)
             }
@@ -53,9 +51,42 @@ struct TextQuestionView: View {
         .frame(maxWidth: .infinity)
     }
 
+    private var helpSteps: some View {
+        let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8))
+                                                         : AnyLayout(HStackLayout(spacing: 8))
+        return layout {
+            ForEach(Array(screen.helpSteps.enumerated()), id: \.offset) { index, step in
+                helpButton(step, index: index)
+            }
+        }
+    }
+
+    private func helpButton(_ step: TextScreenHelpStep, index: Int) -> some View {
+        let revealed = screen.revealedSteps.contains(index)
+        return Button { actions.revealHelp(index) } label: {
+            VStack(spacing: 4) {
+                Image(systemName: step.iconName)
+                    .foregroundStyle(Palette.accent)
+                Text(step.accessibilityLabel)
+                    .font(.subheadline)
+                    .foregroundStyle(Palette.ink)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(4)
+            .frame(minWidth: Touch.minimumPoints, maxWidth: .infinity, minHeight: Touch.minimumPoints)
+            .background(revealed ? Palette.accent.opacity(0.18) : Palette.background,
+                        in: RoundedRectangle(cornerRadius: 8))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(step.accessibilityLabel)
+        .accessibilityAddTraits(revealed ? .isSelected : [])
+    }
+
     private var choices: some View {
         HStack(spacing: 16) {
-            ForEach(Array(question.choices.enumerated()), id: \.offset) { index, label in
+            ForEach(Array(screen.choices.enumerated()), id: \.offset) { index, label in
                 choiceButton(index: index, label: label)
             }
         }
@@ -66,15 +97,15 @@ struct TextQuestionView: View {
             VStack(spacing: 6) {
                 HStack(spacing: 6) {
                     Text(label)
-                    if help.linkedChoiceIndex == index, let name = help.linkedName {
-                        Text(name).foregroundStyle(Palette.accent)
+                    if screen.correctChoiceIndex == index, let name = screen.linkedName {
+                        Text(name).underline()
                     }
                 }
-                if help.evidenceChoiceIndex == index, let sentence = evidenceText {
+                if screen.correctChoiceIndex == index, let sentence = screen.evidenceText {
                     HStack(spacing: 6) {
                         Text(sentence)
                             .font(.footnote)
-                        if let icon = help.linkIcon {
+                        if let icon = screen.evidenceIconName {
                             Image(systemName: icon)
                         }
                     }
@@ -84,25 +115,19 @@ struct TextQuestionView: View {
             .frame(maxWidth: .infinity, minHeight: Touch.minimumPoints)
         }
         .buttonStyle(PrimaryButtonStyle())
-        .accessibilityLabel(TextTable.string("a11y.choice", language))
+        .accessibilityLabel(screen.choiceLabel)
         .accessibilityValue(label)
         .accessibilityIdentifier(SproutIdentifier.choice(index))
     }
 
-    /// The marked sentence shown beside the right choice at the last ladder step.
-    private var evidenceText: String? {
-        guard let index = help.evidenceSentence, question.sentences.indices.contains(index) else { return nil }
-        return question.sentences[index].joined(separator: " ")
-    }
-
     private var hearButton: some View {
         Button { actions.hear() } label: {
-            Image(systemName: ChromeCatalog.symbolName(for: .ear))
+            Image(systemName: screen.hearIconName)
                 .font(.title2)
                 .frame(minWidth: Touch.minimumPoints, minHeight: Touch.minimumPoints)
         }
         .buttonStyle(PrimaryButtonStyle())
-        .accessibilityLabel(question.hearLabel)
+        .accessibilityLabel(screen.hearLabel)
         .accessibilityIdentifier(SproutIdentifier.listen)
     }
 }

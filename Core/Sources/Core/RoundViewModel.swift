@@ -26,6 +26,7 @@ public final class RoundViewModel {
     var onComplete: (() -> Void)?
     var onAbandon: (() -> Void)?
     private var abandoned = false
+    private var revealedTextHelpSteps: Set<Int> = []
     /// Kit state of the current reading item; nil for math and tap-only items. Reset when the item advances.
     var kit: ReadingKitSession?
     /// Answers whose source counts as decoding evidence (a tap or a kit placement).
@@ -112,6 +113,21 @@ public final class RoundViewModel {
     /// The text question of the current item, built from the item alone; nil for every other question.
     public var textQuestion: TextQuestion? {
         TextQuestions.question(item: round.currentItem)
+    }
+
+    /// The text screen uses only the question's own prompt and tap-revealed help.
+    public var textScreen: TextScreen? {
+        guard let question = textQuestion, let textId = round.currentItem.readingId else { return nil }
+        let questionId = "\(textId).\(round.currentItem.configuration)"
+        return TextScreen(questionId: questionId, question: question, language: language,
+                          revealedSteps: revealedTextHelpSteps)
+    }
+
+    /// Reveal only the tapped step, without submitting an answer or recording progress.
+    public func revealTextHelpStep(_ index: Int) {
+        guard !abandoned, summary == nil, TextQuestionKeys.all.indices.contains(index),
+              textQuestion != nil else { return }
+        revealedTextHelpSteps.insert(index)
     }
 
     /// Identity of the current question; independent of language.
@@ -215,6 +231,7 @@ public final class RoundViewModel {
         case .wrong:
             haptics.gentle()
         case .advanced:
+            revealedTextHelpSteps.removeAll()
             refreshHelpLadder()
             resetKit()
         case .completed:

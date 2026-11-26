@@ -50,7 +50,7 @@ public struct TextQuestion: Sendable, Equatable {
                             linkedChoiceIndex: step >= 2 ? correctChoiceIndex : nil,
                             evidenceSentence: step >= 3 ? evidenceSentence : nil,
                             evidenceChoiceIndex: step >= 3 ? correctChoiceIndex : nil,
-                            linkIcon: step >= 3 ? "link" : nil,
+                            linkIcon: step >= 3 ? ChromeCatalog.textEvidenceLinkSymbolName : nil,
                             selectedChoiceIndex: nil)
         return base
     }
@@ -70,8 +70,6 @@ public struct TextQuestion: Sendable, Equatable {
 
 /// Builds the text question of a reading item from the item alone, so it is ready before the first frame.
 public enum TextQuestions {
-    static let helpKeys = ["text.help.evidence", "text.help.link", "text.help.show"]
-
     public static func question(item: Item) -> TextQuestion? {
         guard let id = item.readingId else { return nil }
         let index = item.configuration % 10
@@ -111,7 +109,7 @@ public enum TextQuestions {
     static func helpSteps(_ language: Language) -> [HelpStepPresentation] {
         HelpLadder.kinds.indices.map { index in
             HelpStepPresentation(kind: HelpLadder.kinds[index],
-                                 text: TextTable.string(helpKeys[index], language),
+                                 text: TextTable.string(TextQuestionKeys.all[index], language),
                                  symbolNames: [ChromeCatalog.helpSymbolNames[index]],
                                  colourTokens: ["colour.accent"])
         }

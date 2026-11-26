@@ -15,7 +15,7 @@ public struct AuditStop: Sendable {
 public enum AuditStops {
     public static let all: [AuditStop] = [
         AuditStop(id: "welcome", root: "sproutlab.audit.welcome", title: "Welcome", expectation: "The welcome screen shows the SproutLab title and one large play control with a spoken label.", flows: ["F-01"], defects: []),
-        AuditStop(id: "explorer-trail", root: "sproutlab.audit.explorer-trail", title: "Explorer Trail", expectation: "The Explorer Trail shows a headed Math lane and a headed French reading lane with their level tiles.", flows: ["F-11"], defects: []),
+        AuditStop(id: "explorer-trail", root: "sproutlab.audit.explorer-trail", title: "Explorer Trail", expectation: "On iPhone, the Math and French reading lane headings and the first two level tiles in each lane are visible together without scrolling.", flows: ["F-11"], defects: ["F-24ad1d"]),
         AuditStop(id: "round-summary", root: "sproutlab.audit.round-summary", title: "Round summary", expectation: "The round summary shows the three stars just earned and one control that returns to the trail.", flows: ["F-04"], defects: []),
         AuditStop(id: "terrarium", root: "sproutlab.audit.terrarium", title: "Terrarium", expectation: "The terrarium shows the garden residents with the day and night dial (Cadran), a close button 'Fermer le terrarium' and a nature journal button 'Mon carnet de nature'.", flows: ["F-16"], defects: []),
         AuditStop(id: "creature-gallery", root: "sproutlab.audit.creature-gallery", title: "Creature gallery", expectation: "The creature gallery draws every resident recipe at three sizes with the shared renderer.", flows: ["F-14"], defects: []),
@@ -51,4 +51,8 @@ public enum AuditStops {
         AuditStop(id: "reading-fr-r8", root: "sproutlab.audit.reading-fr-r8", title: "French text", expectation: "A French text question shows the text with all its sentences, one prompt, exactly two choices, a Tap to Hear control for the whole text and three help steps that never change the answer.", flows: [], defects: []),
         AuditStop(id: "reading-en-r8", root: "sproutlab.audit.reading-en-r8", title: "English text", expectation: "An English text question shows the text with all its sentences, one prompt, exactly two choices, a Tap to Hear control for the whole text in English and three help steps that never change the answer.", flows: [], defects: []),
     ]
+
+    /// Portrait iPhone viewport used for the Explorer Trail checkpoint, in points.
+    public static let iPhoneViewport = ScreenMetrics(width: 402, height: 874,
+                                                     insets: SafeInsets(top: 62, leading: 0, bottom: 34, trailing: 0))
 }

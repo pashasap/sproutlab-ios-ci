@@ -30,28 +30,40 @@ struct RoundView: View {
                 VStack(spacing: 24) {
                     backButton
                     progress
-                    promptAndHelper(wide: wide)
-                    if round.kitPresentation != nil {
-                        ReadingKitHost(round: round, language: app.language)
-                    } else if let question = round.sentenceQuestion {
-                        SentenceQuestionView(question: question, language: app.language,
-                                             actions: .init(
-                                                answer: { round.select(choiceIndex: $0, questionNumber: round.questionNumber) },
-                                                hear: { app.hearSentence(question) }))
-                    } else if let question = round.textQuestion {
-                        TextQuestionView(question: question, revealedSteps: round.revealedHelpSteps,
-                                         language: app.language,
-                                         actions: .init(
-                                            answer: { round.select(choiceIndex: $0, questionNumber: round.questionNumber) },
-                                            hear: { app.hearText(question) }))
+                    if let screen = round.textScreen {
+                        textQuestion(screen)
                     } else {
-                        choices
+                        promptAndHelper(wide: wide)
+                        if round.kitPresentation != nil {
+                            ReadingKitHost(round: round, language: app.language)
+                        } else if let question = round.sentenceQuestion {
+                            SentenceQuestionView(question: question, language: app.language,
+                                                 actions: .init(
+                                                    answer: { round.select(choiceIndex: $0, questionNumber: round.questionNumber) },
+                                                    hear: { app.hearSentence(question) }))
+                        } else {
+                            choices
+                        }
                     }
                 }
                 .padding(24)
                 .frame(maxWidth: .infinity)
             }
         }
+    }
+
+    private func textQuestion(_ screen: TextScreen) -> some View {
+        let number = round.questionNumber
+        return TextQuestionView(screen: screen, actions: .init(
+            answer: { round.select(choiceIndex: $0, questionNumber: number) },
+            hear: {
+                guard round.questionNumber == number, let question = round.textQuestion else { return }
+                app.hearText(question)
+            },
+            revealHelp: { index in
+                guard round.questionNumber == number else { return }
+                round.revealTextHelpStep(index)
+            }))
     }
 
     private var backButton: some View {
@@ -92,7 +104,7 @@ struct RoundView: View {
                        englishText: round.readingPresentation?.promptText ?? "",
                        segments: round.m3Presentation == nil && round.m4Presentation == nil ? [] : round.promptSegments,
                        formula: round.m3Presentation == nil ? round.stimulus.presentation.formula : nil)
-            if round.sentenceQuestion == nil && round.textQuestion == nil {
+            if round.sentenceQuestion == nil {
                 Button { speak() } label: {
                     Image(systemName: ChromeCatalog.symbolName(for: .ear))
                         .font(.title2)
