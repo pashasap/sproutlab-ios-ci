@@ -49,7 +49,8 @@ final class AuditStopsUITests: XCTestCase {
             try? captureJSON.write(to: out.appendingPathComponent(id + ".capture.json"))
         }
         print("AUDIT stop \(id) root=\(seen ? "present" : "absent") tree=\(tree) png=\(png.count)")
-        app.terminate()
+        // No terminate call: on the macOS runner it can hang after a complete capture until the allowance kills the
+        // test. The next stop's `launch()` ends this instance and starts a fresh one with its own `-auditStop`.
     }
 
     private func node(_ s: XCUIElementSnapshot) -> [String: Any] {

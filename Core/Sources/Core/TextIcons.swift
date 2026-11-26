@@ -53,6 +53,12 @@ extension TextTable {
         IconDefinition(key: "icon.readingEN", symbol: "book.fill", labelFR: "Lecture en anglais",
                        labelEN: "English reading"),
         IconDefinition(key: "icon.repeat", symbol: "repeat", labelFR: "Répète", labelEN: "Repeat"),
-        IconDefinition(key: "icon.robot", symbol: "leaf.fill", labelFR: "Petit Robot", labelEN: "Little Robot")
+        IconDefinition(key: "icon.robot", symbol: "leaf.fill", labelFR: "Petit Robot", labelEN: "Little Robot"),
+        IconDefinition(key: "icon.tenFrameSplit", symbol: "rectangle.split.2x1",
+                       labelFR: "Partager la boîte à dix", labelEN: "Split the ten frame"),
+        IconDefinition(key: "icon.bridgeTen", symbol: "arrow.turn.down.right",
+                       labelFR: "Passer par dix", labelEN: "Bridge through ten"),
+        IconDefinition(key: "icon.tensones", symbol: "square.stack.3d.up",
+                       labelFR: "Dizaines et unités", labelEN: "Tens and ones")
     ]
 }

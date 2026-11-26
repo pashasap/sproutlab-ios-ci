@@ -117,6 +117,12 @@ extension ChromeCatalog {
         case .letterPair: return "character.book.closed.fill"
         case .joinedWord: return "book.fill"
         case .mendedWord: return "hand.tap.fill"
+        case .countedRow: return "123.rectangle"
+        case .tenFrameSplit: return "rectangle.split.2x1"
+        case .bridgeDownStep: return "arrow.turn.down.right"
+        case .stackedTens: return "square.stack.3d.up"
+        case .sentenceLine: return "flag.fill"
+        case .englishSentenceLine: return "flag"
         }
     }
 

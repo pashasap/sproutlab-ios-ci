@@ -19,9 +19,13 @@ public struct ReadingENProgress: Equatable, Codable, Sendable {
 }
 
 extension ProgressRecord {
-    /// Progress of one level, read from the track that owns it.
+    /// Progress of one level, read from the track that owns it. A level of the readingEN track falls back
+    /// to the shared table, so a save that marked it completed still resolves its progress.
     public func progress(for levelId: String) -> LevelProgress? {
-        ReadingENBank.owns(levelId: levelId) ? readingEN.levels[levelId] : levels[levelId]
+        if ReadingENBank.owns(levelId: levelId) {
+            return readingEN.levels[levelId] ?? levels[levelId]
+        }
+        return levels[levelId]
     }
 
     /// Stores the progress of one level in the track that owns it.

@@ -92,6 +92,8 @@ public struct QuestionStimulus: Sendable, Equatable {
 
 extension Item {
     public var stimulus: QuestionStimulus {
+        if let m4 { return m4.stimulus }
+        if let m2 { return m2.stimulus }
         switch detail {
         case .plain: return kind == .bond ? QuestionStimulus.tenFrame(given: operand, fill: tenFrameFill)
                                           : QuestionStimulus.counting(operand)

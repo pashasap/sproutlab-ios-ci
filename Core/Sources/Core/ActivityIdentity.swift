@@ -2,11 +2,17 @@ public enum ActivityIconKind: Sendable, Equatable, Hashable {
     case dotCluster, tenFrameGap, joiningGroups, crossedOut, differentRows, repeatedShapes
     case soundWave, syllableBlocks, wordCard
     case orderedTiles, blendedSounds, swappedLetter, letterPair, joinedWord, mendedWord
+    case countedRow, tenFrameSplit, bridgeDownStep, stackedTens
+    case sentenceLine
+    case englishSentenceLine
 }
 
 public enum ActivityColourToken: Sendable, Equatable, Hashable, CaseIterable {
     case blue, purple, teal, amber, indigo, pink
-    case red, green, orange, brown, cyan, magenta, slate, gold, lime
+    case red, green, orange, brown, cyan, magenta, slate, gold, lime, maroon, plum, olive
+    case jade
+    case coral
+    case saffron
 }
 
 /// Light and dark value of every activity colour token; the app renders these values.
@@ -33,6 +39,12 @@ public enum ActivityPalette {
         case .slate: return (0x475569, 0xCBD5E1)
         case .gold: return (0x8A6D00, 0xFDE047)
         case .lime: return (0x4D7C0F, 0xBEF264)
+        case .maroon: return (0x7F1D1D, 0xFCA5A5)
+        case .plum: return (0x6B2D5C, 0xE0A6CE)
+        case .olive: return (0x4B5D1F, 0xC7D98A)
+        case .jade: return (0x0B6B58, 0x7FE3CB)
+        case .coral: return (0xA33A2B, 0xFFAB98)
+        case .saffron: return (0x8A4B00, 0xF7C67A)
         }
     }
 
@@ -103,9 +115,27 @@ public struct ActivityIdentity: Sendable, Equatable, Hashable {
     public static let repairWord = ActivityIdentity(.mendedWord, .lime, name: "reading-repair",
                                                     prompt: PromptSpec(key: "reading.prompt.repair"))
 
+    public static let countObjects = ActivityIdentity(.countedRow, .maroon, name: "count-objects",
+                                                      prompt: PromptSpec(key: "m1.prompt.tapCount"))
+    public static let composeTen = ActivityIdentity(.tenFrameSplit, .plum, name: "compose-ten",
+                                                    prompt: PromptSpec(key: "m2.prompt.fillTenFrame"))
+    public static let bridgeTen = ActivityIdentity(.bridgeDownStep, .olive, name: "bridge-ten",
+                                                   prompt: PromptSpec(key: "m3.prompt.count"))
+    public static let tensOnes = ActivityIdentity(.stackedTens, .jade, name: "tens-ones",
+                                                  prompt: PromptSpec(key: "m4.prompt.bundle"))
+
+    /// Reading a whole sentence: complete it, pick its scene, or put its words in order.
+    public static let readSentence = ActivityIdentity(.sentenceLine, .coral, name: "read-sentence",
+                                                      prompt: PromptSpec(key: "reading.prompt.sentence"))
+
+    /// Reading a whole English sentence: the same three kinds over the English bank.
+    public static let readSentenceEN = ActivityIdentity(.englishSentenceLine, .saffron, name: "read-sentence-en",
+                                                        prompt: PromptSpec(key: "reading.prompt.sentence"))
+
     public static let all: [ActivityIdentity] = [counting, makeTen, plus, subtraction, patterns, comparison,
                                                  listenSound, buildSyllable, readWord, orderSounds, blendSounds,
-                                                 changeLetter, findPair, blendWord, repairWord]
+                                                 changeLetter, findPair, blendWord, repairWord, countObjects,
+                                                 composeTen, bridgeTen, tensOnes, readSentence, readSentenceEN]
 
     public func accessibilityName(_ language: Language) -> String {
         TextTable.string(accessibilityNameKey, language)
@@ -129,6 +159,12 @@ public struct ActivityIdentity: Sendable, Equatable, Hashable {
         case .letterPair: return "letter-pair"
         case .joinedWord: return "joined-word"
         case .mendedWord: return "mended-word"
+        case .countedRow: return "counted-row"
+        case .tenFrameSplit: return "split-ten-frame"
+        case .bridgeDownStep: return "downward-bridge-step"
+        case .stackedTens: return "stacked-ten-bundles"
+        case .sentenceLine: return "sentence-line"
+        case .englishSentenceLine: return "english-sentence-line"
         }
     }
 
@@ -177,6 +213,12 @@ extension TextTable {
         "activity.reading-pair.name": TextEntry("Trouver un groupe de lettres", "Finding a letter pair"),
         "activity.reading-join.name": TextEntry("Lire un mot", "Reading a word"),
         "activity.reading-repair.name": TextEntry("Réparer un mot", "Mending a word"),
+        "activity.count-objects.name": TextEntry("Compter les objets", "Counting objects"),
+        "activity.compose-ten.name": TextEntry("Composer dix", "Compose ten"),
+        "activity.bridge-ten.name": TextEntry("Passer par dix", "Bridge through ten"),
+        "activity.tens-ones.name": TextEntry("Dizaines et unités", "Tens and ones"),
+        "activity.read-sentence.name": TextEntry("Lire une phrase", "Reading a sentence"),
+        "activity.read-sentence-en.name": TextEntry("Lire une phrase en anglais", "Reading an English sentence"),
         // Short child-path prompts of the new reading kinds (1 to 3 words) with their keywords.
         "reading.prompt.order": TextEntry("Mets en ordre", "Put in order"),
         "reading.prompt.order.keyword": TextEntry("ordre", "order"),
@@ -228,11 +270,17 @@ extension LevelDefinition {
     public var activityIdentities: [ActivityIdentity] {
         switch activityType {
         case "counting-and-bonds": return [.counting, .makeTen]
+        case "count-objects": return [.countObjects]
+        case "compose-ten": return [.composeTen]
+        case "bridge-ten": return [.bridgeTen]
+        case "tens-ones": return [.tensOnes]
         case "add-and-subtract": return [.plus, .subtraction]
         case "patterns-and-comparison": return [.patterns, .comparison]
         case "reading-sounds": return [.listenSound, .orderSounds, .blendSounds]
         case "reading-syllables": return [.readWord, .changeLetter, .buildSyllable]
         case "reading-words": return [.findPair, .blendWord, .repairWord]
+        case "reading-sentences": return [.readSentence]
+        case "reading-en-sentences": return [.readSentenceEN]
         default: return []
         }
     }

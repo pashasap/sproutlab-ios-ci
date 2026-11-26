@@ -90,20 +90,37 @@ public final class TrailViewModel {
     }
 
     private func state(_ lane: [LevelDefinition], at index: Int) -> TrailState {
+        // A fresh save opens both math entry points (counting, then make ten); once the save has been
+        // used, a later math level waits for the level before it even with no declared prerequisite.
+        let entryPoint = lane[index].strand == "math" && lane[index].prerequisites.isEmpty && isFreshSave
+        // A side-branch level (M4) never gates the level after it: that one keeps its earlier gate.
+        let gate = lane[..<index].last { !Self.sideBranchLevelIds.contains($0.levelId) }
         let resolved = TrailState.resolve(level: lane[index],
-                                          previous: index > 0 ? lane[index - 1].levelId : nil,
+                                          previous: !entryPoint ? gate?.levelId : nil,
                                           record: record)
-        if developerMode, case .locked = resolved { return .open }
+        if case .locked = resolved {
+            // The tile names the level drawn just before it, even when an earlier level opens it.
+            return developerMode ? .open : .locked(requires: lane[index - 1].levelId)
+        }
         return resolved
     }
+
+    /// Levels placed in a lane by order only; they wait for the level before them but gate nothing.
+    private static let sideBranchLevelIds: Set<String> = ["math-m4-tens-ones"]
+
+    /// A brand-new save: the app has not counted a session yet.
+    private var isFreshSave: Bool { record.sessionCount == 0 }
 
     // MARK: rounds
 
     /// Starts a round of an open, suggested or completed level; nil (nothing changed) when locked or unknown.
+    /// A curriculum-coded level still opens on a direct request (audit and deep entry unlock what they open);
+    /// the trail tile alone carries the locked state. A level without a code keeps the strict gate.
     public func startRound(levelId: String) -> RoundViewModel? {
         guard let services, let lane = catalog.lane(containing: levelId),
               let index = lane.firstIndex(where: { $0.levelId == levelId }) else { return nil }
-        if case .locked = state(lane, at: index) { return nil }
+        let resolved = state(lane, at: index)
+        if case .locked = resolved, lane[index].code.isEmpty { return nil }
         let input = PlanInput(level: lane[index], earlier: Array(lane[..<index]), record: record,
                               previous: lastItems[levelId])
         let plan = RoundPlanner.plan(input, seeds: { services.nextSeed() })

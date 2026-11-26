@@ -86,6 +86,16 @@ extension ContentLint {
     /// A reading item has no dots to derive from: it must name an approved, decodable bank item.
     static func readingFindings(_ item: Item, level: LevelDefinition) -> [ContentFinding] {
         let subject = "\(level.levelId):\(item.readingId ?? "")"
+        if let id = item.readingId, let sentence = FrenchSentenceBank.item(id: id) {
+            let valid = item.choices.count == 3 && (0..<3).contains(item.correctIndex)
+                && SentenceDecodability.check(sentence).isEmpty
+            return valid ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]
+        }
+        if let id = item.readingId, let sentence = EnglishSentenceBank.item(id: id) {
+            let valid = item.choices.count == 3 && (0..<3).contains(item.correctIndex)
+                && SentenceDecodability.checkEnglish(sentence).isEmpty
+            return valid ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]
+        }
         if let id = item.readingId, ReadingENBank.item(id: id) != nil {
             return item.choices.count == 3 && (0..<3).contains(item.correctIndex)
                 ? [] : [ContentFinding(kind: "reading-item-invalid", subject: subject)]

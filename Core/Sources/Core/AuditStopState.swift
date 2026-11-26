@@ -28,6 +28,8 @@ public struct AuditStopState: Equatable, Sendable {
     ]
 
     private static let targets: [String: Target] = [
+        "math-m1-count": Target(levelId: "math-m1-count", kind: "math.m1"),
+        "math-m2-ten": Target(levelId: "math-m2-ten", kind: "math.bond"),
         "math-counting": Target(levelId: "math-bonds-10", kind: "math.counting"),
         "math-make-ten": Target(levelId: "math-bonds-10", kind: "math.bond"),
         "math-addition": Target(levelId: "math-add-sub-20", kind: "math.addition"),
@@ -43,6 +45,8 @@ public struct AuditStopState: Equatable, Sendable {
         "reading-select-digraph": Target(levelId: "reading-fr-r3", kind: "r3.selectDigraph"),
         "reading-blend-word": Target(levelId: "reading-fr-r3", kind: "r3.blendWord"),
         "reading-repair-split": Target(levelId: "reading-fr-r3", kind: "r3.repairSplit"),
+        "reading-fr-r6": Target(levelId: "reading-fr-r6", kind: "frr6.sentence"),
+        "reading-en-r6": Target(levelId: "reading-en-r6", kind: "enr6.sentence"),
         "reading-en-sounds": Target(levelId: "reading-en-en1", kind: "en1.graphemeSound"),
         "reading-en-words": Target(levelId: "reading-en-en2", kind: "en2.changeGrapheme"),
         "reading-en-digraphs": Target(levelId: "reading-en-en3", kind: "en3.digraph"),
@@ -69,16 +73,30 @@ public struct AuditStopState: Equatable, Sendable {
         guard let level = LevelCatalog.standard.levels.first(where: { $0.levelId == target.levelId }) else { return nil }
         for seed in UInt64(1)...500 {
             let items = level.generator(seed)
-            if let index = items.firstIndex(where: { kind(of: $0) == target.kind }) {
+            if let index = items.firstIndex(where: { matches($0, target) }) {
                 return AuditStopState(screen: .round, levelId: level.levelId, questionIndex: index, seed: seed)
             }
         }
         return nil
     }
 
+    /// The M1 stop shows a tap-and-count question over a scattered collection; the M2 stop shows a
+    /// partly filled ten-frame; every other stop matches its kind.
+    private static func matches(_ item: Item, _ target: Target) -> Bool {
+        if let shown = item.m2 {
+            return kind(of: item) == target.kind && shown.kind == .fillTenFrame
+                && !shown.frame.filled.isEmpty && !shown.frame.empty.isEmpty
+        }
+        guard let shown = item.m1 else { return kind(of: item) == target.kind }
+        return kind(of: item) == target.kind && shown.kind == .tapCount && shown.groups.first?.layout == .scattered
+    }
+
     /// The kind a question belongs to: its math kind, or the reading rung and activity of its bank item.
     static func kind(of item: Item) -> String {
         if let robot = item.robotId { return robot }
+        if item.m1 != nil { return "math.m1" }
+        if let id = item.readingId, FrenchSentenceBank.item(id: id) != nil { return "frr6.sentence" }
+        if let id = item.readingId, EnglishSentenceBank.item(id: id) != nil { return "enr6.sentence" }
         if let id = item.readingId, let english = ReadingENBank.item(id: id) {
             return "\(english.rung.rawValue).\(english.activity.rawValue)"
         }

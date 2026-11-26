@@ -7,13 +7,15 @@ struct PromptView: View {
     let language: Language
     /// English prompt of an English reading item; when set it replaces the table prompt.
     var englishText: String = ""
+    /// Segments of the current question's own instruction; empty falls back to the identity prompt.
+    var segments: [PromptSegment] = []
     /// Written formula such as "3 + 7 = ?" for an addition or subtraction round.
     var formula: String?
 
     var body: some View {
         VStack(spacing: 8) {
             IdentityBadge(identity: identity, language: language)
-            (englishText.isEmpty ? segments : Text(verbatim: englishText)).font(.title.weight(.bold))
+            (englishText.isEmpty ? promptText : Text(verbatim: englishText)).font(.title.weight(.bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.ink)
             if let formula {
@@ -22,8 +24,12 @@ struct PromptView: View {
         }
     }
 
-    private var segments: Text {
-        identity.promptSegments(language).reduce(Text(verbatim: String())) { result, segment in
+    private var shownSegments: [PromptSegment] {
+        segments.isEmpty ? identity.promptSegments(language) : segments
+    }
+
+    private var promptText: Text {
+        shownSegments.reduce(Text(verbatim: String())) { result, segment in
             if let token = segment.colourToken {
                 return result + Text(segment.text).foregroundStyle(Palette.activity(token)).underline()
             }

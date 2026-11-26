@@ -4,6 +4,12 @@ extension Item {
     /// The identity of this question's type; the level tile shows the same one.
     public var identity: ActivityIdentity {
         if isNotice { return .listenSound }
+        if m1 != nil { return .countObjects }
+        if m2 != nil { return .composeTen }
+        if m3 != nil { return .bridgeTen }
+        if m4 != nil { return .tensOnes }
+        if let id = readingId, FrenchSentenceBank.item(id: id) != nil { return .readSentence }
+        if let id = readingId, EnglishSentenceBank.item(id: id) != nil { return .readSentenceEN }
         if let id = readingId, let bank = ReadingBank.item(id: id) { return ActivityIdentity.reading(bank) }
         if readingId != nil { return .listenSound }
         switch kind {
@@ -24,6 +30,10 @@ extension Item {
     /// Text-table key of the hint shown after a wrong answer.
     public var hintKey: String {
         if readingId != nil || isNotice { return "reading.help.r1.look" }
+        if m1 != nil { return "m1.hint" }
+        if m2 != nil { return "m2.hint" }
+        if m3 != nil { return "m3.hint" }
+        if m4 != nil { return "m4.hint" }
         switch kind {
         case .counting: return "round.look-at-dots"
         case .bond: return "round.count-empty"
@@ -36,6 +46,8 @@ extension Item {
 
     /// The stimulus written out in words and numbers, for reading aloud and for screen readers.
     public func textEquivalent(_ language: Language) -> String {
+        if m2 != nil { return TextTable.string(promptKey, language) }
+        if m4 != nil { return TextTable.string(promptKey, language) }
         if detail == .plain {
             return TextTable.string(kind == .bond ? "round.prompt.bond" : "round.prompt.count", language)
         }

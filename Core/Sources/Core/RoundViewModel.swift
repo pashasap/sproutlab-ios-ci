@@ -85,6 +85,21 @@ public final class RoundViewModel {
     /// What the ear button speaks: the prompt, plus the stimulus in words for the new activities.
     public var speechText: String { round.currentItem.speechLine(language) }
 
+    /// Math M1 presentation after the revealed help steps; nil for every other question.
+    public var m1Presentation: M1Presentation? { round.currentItem.m1Presentation(helpStep: revealedHelpSteps) }
+
+    /// Math M2 presentation after the revealed help steps; nil for every other question.
+    public var m2Presentation: M2Presentation? { round.currentItem.m2Presentation(helpStep: revealedHelpSteps) }
+
+    /// Math M3 presentation after the revealed help steps; nil for every other question.
+    public var m3Presentation: M3Presentation? { round.currentItem.m3Presentation(helpStep: revealedHelpSteps) }
+
+    /// Math M4 presentation after the revealed help steps; nil for every other question.
+    public var m4Presentation: M4Presentation? { round.currentItem.m4Presentation(helpStep: revealedHelpSteps) }
+
+    /// The current question's instruction, split into plain text and its highlighted keyword.
+    public var promptSegments: [PromptSegment] { round.currentItem.promptSegments(language) }
+
     /// Reading presentation of the current question; nil for math and notices.
     public var readingPresentation: ReadingItemPresentation? { round.currentItem.readingPresentation(language) }
 

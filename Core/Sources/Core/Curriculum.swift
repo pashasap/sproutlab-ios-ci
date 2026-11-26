@@ -68,7 +68,10 @@ public struct LevelDefinition: Sendable {
 }
 
 public enum Curriculum {
-    public static let titleKeys = ["trail.level.math-bonds-10.title", "trail.level.math-add-sub-20.title",
+    public static let titleKeys = ["trail.level.math-m1-count.title", "trail.level.math-m4-tens-ones.title",
+                                   "trail.level.math-m2-ten.title",
+                                   "trail.level.math-bonds-10.title", "trail.level.math-add-sub-20.title",
+                                   "trail.level.math-m3-bridge-ten.title",
                                    "trail.level.math-patterns-20.title"] + readingTitleKeys + readingENTitleKeys
         + robotTitleKeys + musicTitleKeys
 
@@ -76,6 +79,39 @@ public enum Curriculum {
         + musicLevels
 
     static let mathLevels: [LevelDefinition] = [
+        LevelDefinition(
+            levelId: "math-m1-count",
+            strand: "math",
+            titleKey: "trail.level.math-m1-count.title",
+            activity: LevelActivity(
+                type: "count-objects",
+                generator: { M1Generator.items(seed: $0) },
+                helpSteps: ["m1.help.mark", "m1.help.row", "m1.help.demo"],
+                prerequisites: []
+            ).enumerating { M1Generator.allConfigurations() }
+        ).coded("M1"),
+        LevelDefinition(
+            levelId: "math-m4-tens-ones",
+            strand: "math",
+            titleKey: "trail.level.math-m4-tens-ones.title",
+            activity: LevelActivity(
+                type: "tens-ones",
+                generator: { M4Generator.items(seed: $0) },
+                helpSteps: ["m4.help.trays", "m4.help.values", "m4.help.digit"],
+                prerequisites: ["math-m1-count"]
+            ).enumerating { M4Generator.allConfigurations() }
+        ).coded("M4"),
+        LevelDefinition(
+            levelId: "math-m2-ten",
+            strand: "math",
+            titleKey: "trail.level.math-m2-ten.title",
+            activity: LevelActivity(
+                type: "compose-ten",
+                generator: { M2Generator.items(seed: $0) },
+                helpSteps: ["m2.help.whole", "m2.help.spaces", "m2.help.move"],
+                prerequisites: ["math-m1-count"]
+            ).enumerating { M2Generator.allConfigurations() }
+        ).coded("M2"),
         LevelDefinition(
             levelId: "math-bonds-10",
             strand: "math",
@@ -98,6 +134,17 @@ public enum Curriculum {
                 prerequisites: ["math-bonds-10"]
             ).enumerating { AddSubGenerator.allConfigurations() }
         ).coded("M4"),
+        LevelDefinition(
+            levelId: "math-m3-bridge-ten",
+            strand: "math",
+            titleKey: "trail.level.math-m3-bridge-ten.title",
+            activity: LevelActivity(
+                type: "bridge-ten",
+                generator: { M3Generator.items(seed: $0) },
+                helpSteps: ["m3.help.frames", "m3.help.ten", "m3.help.first"],
+                prerequisites: ["math-add-sub-20"]
+            ).enumerating { M3Generator.allConfigurations() }
+        ).coded("M3"),
         LevelDefinition(
             levelId: "math-patterns-20",
             strand: "math",

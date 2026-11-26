@@ -79,7 +79,8 @@ struct RoundView: View {
         VStack(spacing: 16) {
             PromptView(identity: round.identity, language: app.language,
                        englishText: round.readingPresentation?.promptText ?? "",
-                       formula: round.stimulus.presentation.formula)
+                       segments: round.m3Presentation == nil && round.m4Presentation == nil ? [] : round.promptSegments,
+                       formula: round.m3Presentation == nil ? round.stimulus.presentation.formula : nil)
             Button { speak() } label: {
                 Image(systemName: ChromeCatalog.symbolName(for: .ear))
                     .font(.title2)
@@ -112,7 +113,15 @@ struct RoundView: View {
                     .foregroundStyle(Palette.ink)
                     .accessibilityIdentifier(SproutIdentifier.stimulus)
             }
-            if round.readingPresentation == nil {
+            if let shown = round.m1Presentation {
+                M1View(shown: shown, label: TextTable.string("a11y.dots", app.language))
+            } else if let shown = round.m2Presentation {
+                M2View(shown: shown, label: TextTable.string("a11y.dots", app.language))
+            } else if let shown = round.m3Presentation {
+                M3View(shown: shown, label: TextTable.string("a11y.dots", app.language), language: app.language)
+            } else if let shown = round.m4Presentation {
+                M4View(shown: shown, language: app.language)
+            } else if round.readingPresentation == nil {
                 let presentation = round.stimulus.presentation
                 DotsView(presentation: presentation, cue: round.wrongCue?.target,
                          isComparison: round.identity == .comparison)

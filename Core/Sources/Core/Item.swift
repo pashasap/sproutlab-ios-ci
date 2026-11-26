@@ -62,6 +62,14 @@ public struct Item: Sendable, Equatable {
     public var readingId: String?
     /// The robot level kind this item stands for ("robot.C1"); nil for every other item.
     public var robotId: String?
+    /// Presentation data of a Math M1 question; nil for every other item.
+    public internal(set) var m1: M1Presentation?
+    /// Presentation data of a Math M2 question; nil for every other item.
+    public internal(set) var m2: M2Presentation?
+    /// Presentation data of a Math M3 question; nil for every other item.
+    public internal(set) var m3: M3Presentation?
+    /// Presentation data of a Math M4 question; nil for every other item.
+    public internal(set) var m4: M4Presentation?
     /// True for the icon-led notice that stands in for a reading question the language has no level for.
     public internal(set) var isNotice: Bool = false
     /// Text key of the notice; nil for every other item.
@@ -136,6 +144,10 @@ public struct Item: Sendable, Equatable {
         out.tenFrameFill = tenFrameFill
         out.readingId = readingId
         out.robotId = robotId
+        out.m1 = m1
+        out.m2 = m2
+        out.m3 = m3
+        out.m4 = m4
         out.isNotice = isNotice
         out.noticeTextKey = noticeTextKey
         out.iconKey = iconKey
@@ -146,6 +158,10 @@ public struct Item: Sendable, Equatable {
     public var promptKey: String {
         if let noticeTextKey { return noticeTextKey }
         if readingId != nil, let key = identity.promptKey { return key }
+        if let m1 { return "m1.prompt." + String(describing: m1.kind) }
+        if let m2 { return "m2.prompt." + String(describing: m2.kind) }
+        if let m3 { return m3.promptKey }
+        if let m4 { return m4.promptKey }
         switch kind {
         case .counting: return "round.prompt.count"
         case .bond: return "round.prompt.bond"

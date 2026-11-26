@@ -1,5 +1,8 @@
 """Print UDID|device name|runtime for the newest iPhone Pro on the newest available iOS runtime."""
-import json, re, subprocess, sys
+import json
+import re
+import subprocess
+import sys
 
 j = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', '-j']))
 PHONE = re.compile(r'iPhone \d+ Pro')
